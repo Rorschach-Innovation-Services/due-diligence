@@ -1,15 +1,15 @@
 // components/Layout.tsx
-"use client";
+'use client';
 import { ReactNode, useState } from "react";
 import Navbar from "./Navbar";
 import QuestionCategoryList from "./QuestionCategoryList";
 import QuestionItemList from "./QuestionItemList";
 
-type Props = {
+interface LayoutProps {
   children?: ReactNode;
-};
+}
 
-const Layout = ({ children }: Props) => {
+const Layout = ({ children }: LayoutProps) => {
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
 
   const handleCategoryChange = (category: any) => {
@@ -30,7 +30,7 @@ const Layout = ({ children }: Props) => {
 
         <main className="p-6 flex-1 bg-gray-100 overflow-y-auto">
           {/* Page content */}
-          <QuestionItemList questions={selectedCategory?.questions ?? []} />
+          <QuestionItemList selectedCategory={selectedCategory} />
           {children}
         </main>
       </div>
