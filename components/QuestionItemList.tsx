@@ -1,7 +1,8 @@
-// components/QuestionItemList.tsx
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { EditIcon } from "@/icons/EditIcon";
+import { DeleteIcon } from "@/icons/Delete";
 
 interface Question {
   id: string;
@@ -21,6 +22,7 @@ interface QuestionItemListProps {
 
 export default function QuestionItemList({ selectedCategory }: QuestionItemListProps) {
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<string[]>([]);
+  const [collapseAll, setCollapseAll] = useState(false);
 
   useEffect(() => {
     // Collapse all questions when the selected category changes
@@ -39,18 +41,38 @@ export default function QuestionItemList({ selectedCategory }: QuestionItemListP
     });
   };
 
+  const handleToggleCollapseAll = () => {
+    setCollapseAll(!collapseAll);
+    setExpandedQuestionIds(collapseAll ? [] : selectedCategory?.questions.map(q => q.id) || []);
+  };
+
   return (
     <div className="p-4">
-      <h2 className="text-sm font-bold mb-2">
-        {selectedCategory ? `Category: ${selectedCategory.name}` : "Category"}
-      </h2>
+      <div className="flex">
+        <h2 className="text-sm font-bold px-4 py-2 rounded bg-gray-200 mb-5">
+          {selectedCategory ? `${selectedCategory.name}` : "Category"}
+        </h2>
+        <p
+          className="text-gray-400 text-sm cursor-pointer ml-auto"
+          onClick={handleToggleCollapseAll}
+        >
+          {collapseAll ? "Collapse All" : "Expand All"}
+        </p>
+      </div>
 
       <div className="space-y-4">
         {selectedCategory?.questions.map((question: Question) => (
-          <div key={question.id} className="border p-4 rounded shadow">
+          <div key={question.id} className="bg-white border p-4 rounded shadow">
             <div className="flex justify-between items-center">
-              <div className="cursor-pointer" onClick={() => handleQuestionClick(question.id)}>
-                <p className="">{question.title}</p>
+              <div className="flex items-start cursor-pointer" onClick={() => handleQuestionClick(question.id)}>
+                {expandedQuestionIds.includes(question.id) && (
+                  <div className="mr-2 cursor-pointer">
+                    <EditIcon className="text-gray-400" />
+                  </div>
+                )}
+                <p className="text-sm">{question.title}</p>
+
+
               </div>
               {expandedQuestionIds.includes(question.id) ? (
                 <FontAwesomeIcon
@@ -68,8 +90,16 @@ export default function QuestionItemList({ selectedCategory }: QuestionItemListP
             </div>
 
             {expandedQuestionIds.includes(question.id) && (
-              <div className="mt-2 p-4 bg-gray-200 border border-gray-300 rounded">
+              <div className="flex items-start justify-start mt-2 relative p-4 bg-blue-50 border border-blue-500 rounded text-sm">
+                <div className="mr-2 cursor-pointer">
+                    <EditIcon className="text-blue-400" />
+                  </div>
                 <p>{question.content}</p>
+                {expandedQuestionIds.includes(question.id) && (
+                  <div className=" absolute top-0 right-0 mr-1 mt-1 cursor-pointer">
+                    <DeleteIcon className="text-red-400" />
+                  </div>
+                )}
               </div>
             )}
           </div>

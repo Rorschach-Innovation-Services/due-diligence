@@ -30,7 +30,11 @@ const Layout = ({ children }: LayoutProps) => {
 
         <main className="p-6 flex-1 bg-gray-100 overflow-y-auto">
           {/* Page content */}
-          <QuestionItemList selectedCategory={selectedCategory} />
+          {selectedCategory? <QuestionItemList selectedCategory={selectedCategory} /> : 
+            <div>
+              Introduction Content
+            </div>
+          }
           {children}
         </main>
       </div>
