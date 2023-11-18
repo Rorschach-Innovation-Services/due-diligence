@@ -125,7 +125,7 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
         {categories.map((cat) => (
           <div key={cat.id} className="relative">
             <div
-              className={`flex items-center text-xs mr-6 px-1 py-2 rounded ${cat.id === selectedCategoryId ? "bg-blue-500 text-white" : "hover:bg-blue-100 bg-gray-200"
+              className={`flex items-center text-xs px-1 py-2 rounded ${cat.id === selectedCategoryId ? "bg-blue-500 text-white" : "hover:bg-blue-100 bg-gray-200"
                 } cursor-pointer overflow-hidden`}
               style={{ whiteSpace: "nowrap", textOverflow: "ellipsis" }}
               onClick={() => handleCategoryChange(cat.id)}
@@ -133,14 +133,14 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
             >
               {cat.name.charAt(0).toUpperCase() + cat.name.slice(1).toLowerCase()}
 
-              {cat.id === selectedCategoryId && (
+              {/* {cat.id === selectedCategoryId && (
                 <div
                   className="absolute top-2 right-0 bottom-0 mr-2 cursor-pointer"
                   onClick={() => setShowOptions(showOptions === cat.id ? null : cat.id)}
                 >
                   <FontAwesomeIcon icon={faEllipsisV} className="text-gray-600" />
                 </div>
-              )}
+              )} */}
             </div>
             <OptionsDropdown
               categoryId={cat.id}
