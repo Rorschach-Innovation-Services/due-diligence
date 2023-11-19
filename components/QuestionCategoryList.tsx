@@ -7,7 +7,7 @@ import OptionsDropdown from "./OptionsDropdown";
 interface Question {
   id: string;
   title: string;
-  content: string;
+  contents: string[];
 }
 
 interface Category {
@@ -29,52 +29,52 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
         {
           id: '1',
           title: 'What is the legal status of the organisation?',
-          content: 'The University of Cape Town (UCT) is a university incorporated in accordance with the Higher Education Act, 101 of 1997...',
+          contents: ['The University of Cape Town (UCT) is a university incorporated in accordance with the Higher Education Act, 101 of 1997...', "Second answer", "THree eee"],
         },
         {
           id: '2',
           title: 'What is the registration number and name of the registration body with which your organisation is registered?',
-          content: 'N/A',
+          contents: ['N/A', "Second answer"],
         },
         {
           id: '3',
           title: 'Is your organisation affiliated with another organisation?',
-          content: 'No.',
+          contents: ['No.', "Second answer"],
         },
         {
           id: '4',
           title: 'Who is the head of your organisation and what is his/her job title?',
-          content: 'Professor Daya Reddy, [Interim] Vice-Chancellor [For US funding applications, it is appropriate to add that in South Africa the Vice-Chancellor is the equivalent of the President of an American university.]',
+          contents: ['Professor Daya Reddy, [Interim] Vice-Chancellor [For US funding applications, it is appropriate to add that in South Africa the Vice-Chancellor is the equivalent of the President of an American university.]', "Second answer"],
         },
         {
           id: '5',
           title: 'Describe the corporate governance of the university.',
-          content: 'The University is governed by a 30-member Council, which consists of the executive officers, other employees of the institution, students and persons not members of staff or students of the institution...',
+          contents: ['The University is governed by a 30-member Council, which consists of the executive officers, other employees of the institution, students and persons not members of staff or students of the institution...', "Second answer"],
         },
         {
           id: '6',
           title: 'Please provide an organogram that shows the structure of your organisation (including the main executive and non-executive governance boards) and indicate the main board(s) for governance of research.',
-          content: '[Insert organogram]',
+          contents: ['[Insert organogram]', "Second answer"],
         },
         {
           id: '7',
           title: 'Please provide a list or a link of current members of the governing board (at UCT the ‘governing board’ = Council)',
-          content: 'The current members of the UCT Council can be viewed here: [Link]',
+          contents: ['The current members of the UCT Council can be viewed here: [Link]', "Second answer"],
         },
         {
           id: '8',
           title: 'Does the organization have a policy that demonstrates its governance structure in all its grant applications?',
-          content: 'The University has clear procedures to be followed in regard to the application for grants, the management of grants once they are awarded, and the close-out of grants...',
+          contents: ['The University has clear procedures to be followed in regard to the application for grants, the management of grants once they are awarded, and the close-out of grants...', "Second answer"],
         },
         {
           id: '9',
           title: 'Please provide a breakdown of the number of staff in your organisation for categories (i) permanent staff and (ii) temporary staff:',
-          content: 'Permanent: 4,984 (1,264 academic, 3,698 professional, administrative support and service, and 22 external); temporary: +- 1,670...',
+          contents: ['Permanent: 4,984 (1,264 academic, 3,698 professional, administrative support and service, and 22 external); temporary: +- 1,670...', "Second answer"],
         },
         {
           id: '10',
           title: 'Does the organization have a process that defines the frequency of meetings of its governing board?',
-          content: 'Yes. The Council meets 4 times per year and the Executive Committee of Council meets 6 times per year. See the UCT Calendar of Meetings.',
+          contents: ['Yes. The Council meets 4 times per year and the Executive Committee of Council meets 6 times per year. See the UCT Calendar of Meetings.', "Second answer"],
         },
       ],
     },
@@ -85,12 +85,12 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
         {
           id: '1',
           title: 'How are you?',
-          content: 'Nothing to say.... i i i do not want to talk',
+          contents: ['Nothing to say.... i i i do not want to talk', "Second answer"],
         },
         {
           id: '2',
           title: 'How many?',
-          content: 'Thousands and thousands of them',
+          contents: ['Thousands and thousands of them', "Second answer"],
         },
       ],
     },
