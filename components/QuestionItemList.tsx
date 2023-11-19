@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
+import { faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
 import { EditIcon } from "@/icons/EditIcon";
 import { DeleteIcon } from "@/icons/Delete";
 import AddQuestionButton from "@/buttons/AddQuestionButton";
@@ -11,27 +11,14 @@ interface Question {
   contents: string[];
 }
 
-interface Category {
-  id: string;
-  name: string;
-  questions: Array<Question>;
-}
-
-interface QuestionItemProps {
-  question: Question;
-  expandedQuestionIds: string[];
-  textareaValues: { [key: string]: string[] | undefined }; // Update the type here
-  setExpandedQuestionIds: React.Dispatch<React.SetStateAction<string[]>>;
-  setTextareaValues: React.Dispatch<React.SetStateAction<{ [key: string]: string[] | undefined }>>; // Update the type here
-}
-
-
 interface QuestionItemProps {
   question: Question;
   expandedQuestionIds: string[];
   textareaValues: { [key: string]: string[] | undefined };
   setExpandedQuestionIds: React.Dispatch<React.SetStateAction<string[]>>;
   setTextareaValues: React.Dispatch<React.SetStateAction<{ [key: string]: string[] | undefined }>>;
+  contentEditMode: { [key: string]: number | null };
+  setContentEditMode: React.Dispatch<React.SetStateAction<{ [key: string]: number | null }>>;
 }
 
 const QuestionItem: React.FC<QuestionItemProps> = ({
@@ -40,44 +27,65 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   textareaValues,
   setExpandedQuestionIds,
   setTextareaValues,
+  contentEditMode,
+  setContentEditMode,
 }) => {
-  const [editMode, setEditMode] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleEditClick = () => {
-    setEditMode(!editMode);
+  const handleEditClick = (contentIndex: number) => {
+    setContentEditMode((prevEditModes) => {
+      const currentEditMode = prevEditModes[question.id];
+
+      // Toggle edit mode for the clicked content
+      const newEditModes = {
+        ...prevEditModes,
+        [question.id]: currentEditMode === contentIndex ? null : contentIndex,
+      };
+
+      return newEditModes;
+    });
   };
 
   const handleTextareaBlur = () => {
-    setEditMode(false);
-
     // Update textareaValues with the latest content
     setTextareaValues((prevValues) => ({
       ...prevValues,
-      [question.id]: question.contents.map((_, i) => (prevValues[question.id]?.[i] || '')),
+      [question.id]: question.contents.map((_, i) => (prevValues[question.id]?.[i] || "")),
     }));
   };
 
   useEffect(() => {
-    console.log('textareaValues[question.id]:', textareaValues);
-  }, [textareaValues]);
+    // Focus on the textarea when entering edit mode
+    if (textareaRef.current && contentEditMode[question.id] !== null) {
+      textareaRef.current.focus();
+    }
+  }, [contentEditMode, question.id]);
 
   return (
     <>
       {question.contents.map((content, index) => (
-        
-        <div key={index} className={`flex items-start justify-start mt-2 relative p-4 ${editMode ? 'bg-gray-100' : 'bg-blue-50'} border ${editMode ? 'border-gray-500' : 'border-blue-500'} rounded text-sm`} style={{ width: "100%" }}>
-          <div className="mr-2 cursor-pointer" onClick={handleEditClick}>
-            <EditIcon className={`text-${editMode ? 'gray' : 'blue'}-500`} />
+        <div
+          key={index}
+          className={`flex items-start justify-start mt-2 relative p-4 ${contentEditMode[question.id] === index ? "bg-gray-100" : "bg-blue-50"
+            } border ${contentEditMode[question.id] === index ? "border-gray-500" : "border-blue-500"
+            } rounded text-sm`}
+          style={{ width: "100%" }}
+        >
+          <div className="mr-2 cursor-pointer" onClick={() => handleEditClick(index)}>
+            <EditIcon className={`text-${contentEditMode[question.id] === index ? "gray" : "blue"}-500`} />
           </div>
           <textarea
-            className={`flex-1 outline-none border-none bg-transparent resize-none ${editMode ? ' focus:border-gray-500' : ''}`}
-            value={(textareaValues[question.id] || [])[index] || ''}
-            readOnly={!editMode || !expandedQuestionIds.includes(question.id)}
+            ref={textareaRef}
+            className={`flex-1 outline-none border-none bg-transparent resize-none ${contentEditMode[question.id] === index ? " focus:border-gray-500" : ""
+              }`}
+            value={(textareaValues[question.id] || [])[index] || ""}
+            readOnly={
+              contentEditMode[question.id] !== index
+            }
             onChange={(e) => {
               const newTextareaValues = { ...textareaValues };
-              newTextareaValues[question.id] = newTextareaValues[question.id] || []; // Ensure the array exists
+              newTextareaValues[question.id] = newTextareaValues[question.id] || [];
 
-              // Use type assertion to tell TypeScript that the value is not undefined
               if (newTextareaValues[question.id]) {
                 (newTextareaValues[question.id] as string[])[index] = e.target.value;
                 setTextareaValues(newTextareaValues);
@@ -87,9 +95,8 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
             style={{ marginRight: "8px" }}
             onBlur={handleTextareaBlur}
           />
-          
           {expandedQuestionIds.includes(question.id) && (
-            <div className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" onClick={() => handleEditClick()}>
+            <div className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" onClick={() => handleEditClick(index)}>
               <DeleteIcon className="text-gray-400 hover:text-red-400" />
             </div>
           )}
@@ -100,17 +107,20 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
 };
 
 
-export default function QuestionItemList({ selectedCategory }: { selectedCategory: Category | null }) {
+interface Category {
+  id: string;
+  name: string;
+  questions: Array<Question>;
+}
+
+function QuestionItemList({ selectedCategory }: { selectedCategory: Category | null }) {
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<string[]>([]);
   const [collapseAll, setCollapseAll] = useState(false);
-
   const [textareaValues, setTextareaValues] = useState<{ [key: string]: string[] | undefined }>({});
-
-  // const [textareaValues, setTextareaValues] = useState<{ [key: string]: string }>({});
   const [titleValues, setTitleValues] = useState<{ [key: string]: string }>({});
   const [editTitleMode, setEditTitleMode] = useState(false);
-  const [focusedQuestion, setFocusedQuestion] = useState<string | null>(null); // Updated
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [focusedQuestion, setFocusedQuestion] = useState<string | null>(null);
+  const [contentEditMode, setContentEditMode] = useState<{ [key: string]: number | null }>({});
 
   useEffect(() => {
     // Collapse all questions when the selected category changes
@@ -125,32 +135,43 @@ export default function QuestionItemList({ selectedCategory }: { selectedCategor
         initialValues[question.id] = question.contents.map((content) => content);
       });
 
-
-
       const initialTitleValues = selectedCategory.questions.reduce((acc, question) => {
         acc[question.id] = question.title;
         return acc;
       }, {} as { [key: string]: string });
 
-      console.log("Selected Category",selectedCategory)
-      console.log("Initial Content values",initialValues)
-
-      console.log("Initial Title values",initialTitleValues)
+      console.log("Selected Category", selectedCategory);
+      console.log("Initial Content values", initialValues);
+      console.log("Initial Title values", initialTitleValues);
 
       setTextareaValues(initialValues);
       setTitleValues(initialTitleValues);
     }
   }, [selectedCategory]);
 
-
-
- 
-
-
+  // const handleQuestionClick = (questionId: string) => {
+  //   setExpandedQuestionIds((prevIds) => {
+  //     if (prevIds.includes(questionId)) {
+  //       return prevIds.filter((id) => id !== questionId);
+  //     } else {
+  //       return [...prevIds, questionId];
+  //     }
+  //   });
+  //   setFocusedQuestion(null); // Reset focused question
+  // };
   const handleQuestionClick = (questionId: string) => {
-    setExpandedQuestionIds([questionId]); // Set the expanded question ids to only the clicked question
+    setExpandedQuestionIds((prevIds) => {
+      if (prevIds.includes(questionId)) {
+        // If the clicked question is already expanded, collapse it
+        return [];
+      } else {
+        // If the clicked question is not expanded, collapse all others and expand it
+        return [questionId];
+      }
+    });
     setFocusedQuestion(null); // Reset focused question
   };
+
 
   const handleToggleCollapseAll = () => {
     setCollapseAll(!collapseAll);
@@ -162,25 +183,24 @@ export default function QuestionItemList({ selectedCategory }: { selectedCategor
     setFocusedQuestion(questionId); // Set the currently focused question
     setEditTitleMode(true);
   };
-  useEffect(() => {
-    if (editTitleMode && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [editTitleMode]);
 
   const handleTitleInputBlur = () => {
     setEditTitleMode(false);
   };
+
   return (
     <div className="p-4">
       <div className="flex">
-        <h2 className="text-sm text-gray-500 font-bold px-4 py-2 rounded bg-gray-200 mb-5">
+        <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{width:"100%"}}>
           {selectedCategory ? `${selectedCategory.name}` : "Category"}
         </h2>
       </div>
 
       <div className="space-y-4 relative">
-        {/* ... (other code) */}
+        <button className="bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
+          <FontAwesomeIcon icon={faPlus} className="mr-2"/>
+          <span>New Question</span>
+        </button>
         {selectedCategory?.questions.map((question: Question) => (
           <div key={question.id} className="bg-white border p-4 rounded shadow">
             <div className="flex flex-3 justify-between items-center">
@@ -190,11 +210,7 @@ export default function QuestionItemList({ selectedCategory }: { selectedCategor
                     <div className="flex w-full items-start">
                       {editTitleMode && focusedQuestion === question.id ? (
                         <div className="mr-2 flex items-center cursor-pointer">
-                          <FontAwesomeIcon
-                            icon={faSave} // Assuming you have an icon for the tick, you can replace "faCheck" with the actual icon you want to use
-                            className="mr-2 text-blue-500"
-                          // onClick={() => handleSaveTitleClick(question.id)}
-                          />
+                          <FontAwesomeIcon icon={faSave} className="mr-2 text-blue-500" />
                         </div>
                       ) : (
                         <div className="mr-2 cursor-pointer" onClick={() => handleEditTitleClick(question.id)}>
@@ -203,7 +219,7 @@ export default function QuestionItemList({ selectedCategory }: { selectedCategor
                       )}
 
                       <textarea
-                        className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editTitleMode && focusedQuestion === question.id ? 'border-green-500 border-1' : ''
+                        className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editTitleMode && focusedQuestion === question.id ? "border-green-500 border-1" : ""
                           }`}
                         value={titleValues[question.id] || ""}
                         readOnly={!editTitleMode || !expandedQuestionIds.includes(question.id)}
@@ -213,14 +229,11 @@ export default function QuestionItemList({ selectedCategory }: { selectedCategor
                             [question.id]: e.target.value,
                           }));
                         }}
-                        ref={textareaRef}
                         rows={3}
                         style={{ marginRight: "8px" }}
                         onBlur={handleTitleInputBlur}
                       />
                     </div>
-
-
                   </div>
                 ) : (
                   <p className="text-sm">{question.title}</p>
@@ -247,6 +260,8 @@ export default function QuestionItemList({ selectedCategory }: { selectedCategor
                 textareaValues={textareaValues}
                 setExpandedQuestionIds={setExpandedQuestionIds}
                 setTextareaValues={setTextareaValues}
+                contentEditMode={contentEditMode}
+                setContentEditMode={setContentEditMode}
               />
             )}
           </div>
@@ -256,20 +271,4 @@ export default function QuestionItemList({ selectedCategory }: { selectedCategor
   );
 }
 
-
-
-
-
-
-// Expand Multiple:
-
- // const handleQuestionClick = (questionId: string) => {
-  //   setExpandedQuestionIds((prevIds) => {
-  //     if (prevIds.includes(questionId)) {
-  //       return prevIds.filter((id) => id !== questionId);
-  //     } else {
-  //       return [...prevIds, questionId];
-  //     }
-  //   });
-  //   setFocusedQuestion(null); // Reset focused question
-  // };
+export default QuestionItemList;
