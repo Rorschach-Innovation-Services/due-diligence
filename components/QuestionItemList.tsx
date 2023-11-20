@@ -7,7 +7,7 @@ import AddQuestionButton from "@/buttons/AddQuestionButton";
 import AddAnswerButton from "@/buttons/AddAnswerButton";
 
 interface Question {
-  id: string;
+  _id: string;
   title: string;
   contents: string[];
 }
@@ -35,12 +35,12 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
 
   const handleEditClick = (contentIndex: number) => {
     setContentEditMode((prevEditModes) => {
-      const currentEditMode = prevEditModes[question.id];
+      const currentEditMode = prevEditModes[question._id];
 
       // Toggle edit mode for the clicked content
       const newEditModes = {
         ...prevEditModes,
-        [question.id]: currentEditMode === contentIndex ? null : contentIndex,
+        [question._id]: currentEditMode === contentIndex ? null : contentIndex,
       };
 
       return newEditModes;
@@ -51,52 +51,52 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
     // Update textareaValues with the latest content
     setTextareaValues((prevValues) => ({
       ...prevValues,
-      [question.id]: question.contents.map((_, i) => (prevValues[question.id]?.[i] || "")),
+      [question._id]: question.contents.map((_, i) => (prevValues[question._id]?.[i] || "")),
     }));
   };
 
   useEffect(() => {
     // Focus on the textarea when entering edit mode
-    if (textareaRef.current && contentEditMode[question.id] !== null) {
+    if (textareaRef.current && contentEditMode[question._id] !== null) {
       textareaRef.current.focus();
     }
-  }, [contentEditMode, question.id]);
+  }, [contentEditMode, question._id]);
 
   return (
     <>
       {question.contents.map((content, index) => (
         <div
           key={index}
-          className={`flex items-start justify-start mt-2 relative p-4 ${contentEditMode[question.id] === index ? "bg-gray-100" : "bg-blue-50"
-            } border ${contentEditMode[question.id] === index ? "border-gray-500" : "border-blue-500"
+          className={`flex items-start justify-start mt-2 relative p-4 ${contentEditMode[question._id] === index ? "bg-gray-100" : "bg-blue-50"
+            } border ${contentEditMode[question._id] === index ? "border-gray-500" : "border-blue-500"
             } rounded text-sm`}
           style={{ width: "100%" }}
         >
           <div className="mr-2 cursor-pointer" onClick={() => handleEditClick(index)}>
-            <EditIcon className={`text-${contentEditMode[question.id] === index ? "gray" : "blue"}-500`} />
+            <EditIcon className={`text-${contentEditMode[question._id] === index ? "gray" : "blue"}-500`} />
           </div>
           <textarea
             ref={textareaRef}
-            className={`flex-1 outline-none border-none bg-transparent resize-none ${contentEditMode[question.id] === index ? " focus:border-gray-500" : ""
+            className={`flex-1 outline-none border-none bg-transparent resize-none ${contentEditMode[question._id] === index ? " focus:border-gray-500" : ""
               }`}
-            value={(textareaValues[question.id] || [])[index] || ""}
+            value={(textareaValues[question._id] || [])[index] || ""}
             readOnly={
-              contentEditMode[question.id] !== index
+              contentEditMode[question._id] !== index
             }
             onChange={(e) => {
               const newTextareaValues = { ...textareaValues };
-              newTextareaValues[question.id] = newTextareaValues[question.id] || [];
+              newTextareaValues[question._id] = newTextareaValues[question._id] || [];
 
-              if (newTextareaValues[question.id]) {
-                (newTextareaValues[question.id] as string[])[index] = e.target.value;
+              if (newTextareaValues[question._id]) {
+                (newTextareaValues[question._id] as string[])[index] = e.target.value;
                 setTextareaValues(newTextareaValues);
               }
             }}
-            rows={expandedQuestionIds.includes(question.id) ? 3 : 1}
+            rows={expandedQuestionIds.includes(question._id) ? 3 : 1}
             style={{ marginRight: "8px" }}
             onBlur={handleTextareaBlur}
           />
-          {expandedQuestionIds.includes(question.id) && (
+          {expandedQuestionIds.includes(question._id) && (
             <div className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" onClick={() => handleEditClick(index)}>
               <DeleteIcon className="text-gray-400 hover:text-red-400" />
             </div>
@@ -118,7 +118,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
 };
 
 interface Category {
-  id: string;
+  _id: string;
   name: string;
   questions: Array<Question>;
 }
@@ -137,8 +137,9 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     // Fetch questions from the database based on the selected category's id
     const fetchQuestions = async () => {
       try {
-        const response = await fetch(`/api/categories?id=${selectedCategory?.id}`);
+        const response = await fetch(`/api/categories?id=${selectedCategory?._id}`);
         const data = await response.json();
+
 
         // Assuming the data structure is similar to what you provided in the Postman response
         setQuestionsFromDb(data?.category?.questions || []);
@@ -147,7 +148,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       }
     };
 
-    if (selectedCategory?.id) {
+    if (selectedCategory?._id) {
       fetchQuestions();
     }
   }, [selectedCategory]);
@@ -162,17 +163,17 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       const initialValues: { [key: string]: string[] } = {};
   
       questionsFromDb.forEach((question) => {
-        initialValues[question.id] = question.contents.map((content) => content);
+        initialValues[question._id] = question.contents.map((content) => content);
       });
   
       const initialTitleValues = questionsFromDb.reduce((acc, question) => {
-        acc[question.id] = question.title;
+        acc[question._id] = question.title;
         return acc;
       }, {} as { [key: string]: string });
   
-      console.log("Questions from Database", questionsFromDb);
-      console.log("Initial Content values", initialValues);
-      console.log("Initial Title values", initialTitleValues);
+      // console.log("Questions from Database", questionsFromDb);
+      // console.log("Initial Content values", initialValues);
+      // console.log("Initial Title values", initialTitleValues);
   
       setTextareaValues(initialValues);
       setTitleValues(initialTitleValues);
@@ -195,7 +196,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
 
   const handleToggleCollapseAll = () => {
     setCollapseAll(!collapseAll);
-    setExpandedQuestionIds(collapseAll ? [] : questionsFromDb.map((q) => q.id) || []);
+    setExpandedQuestionIds(collapseAll ? [] : questionsFromDb.map((q) => q._id) || []);
     setFocusedQuestion(null); // Reset focused question
   };
 
@@ -222,31 +223,31 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
           <span>New Question</span>
         </button>
         {questionsFromDb.map((question: Question) => (
-          <div key={question.id} className="bg-white border p-4 rounded shadow">
+          <div key={question._id} className="bg-white border p-4 rounded shadow">
             <div className="flex flex-3 justify-between items-center">
               <div className="flex w-full items-start ">
-                {expandedQuestionIds.includes(question.id) ? (
+                {expandedQuestionIds.includes(question._id) ? (
                   <div className="mr-2 flex w-full cursor-pointer">
                     <div className="flex w-full items-start">
-                      {editTitleMode && focusedQuestion === question.id ? (
+                      {editTitleMode && focusedQuestion === question._id ? (
                         <div className="mr-2 flex items-center cursor-pointer">
                           <FontAwesomeIcon icon={faSave} className="mr-2 text-blue-500" />
                         </div>
                       ) : (
-                        <div className="mr-2 cursor-pointer" onClick={() => handleEditTitleClick(question.id)}>
+                        <div className="mr-2 cursor-pointer" onClick={() => handleEditTitleClick(question._id)}>
                           <EditIcon className={`text-gray-300 text-bold`} />
                         </div>
                       )}
 
                       <textarea
-                        className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editTitleMode && focusedQuestion === question.id ? "border-green-500 border-1" : ""
+                        className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editTitleMode && focusedQuestion === question._id ? "border-green-500 border-1" : ""
                           }`}
-                        value={titleValues[question.id] || ""}
-                        readOnly={!editTitleMode || !expandedQuestionIds.includes(question.id)}
+                        value={titleValues[question._id] || ""}
+                        readOnly={!editTitleMode || !expandedQuestionIds.includes(question._id)}
                         onChange={(e) => {
                           setTitleValues((prevValues) => ({
                             ...prevValues,
-                            [question.id]: e.target.value,
+                            [question._id]: e.target.value,
                           }));
                         }}
                         rows={3}
@@ -259,21 +260,21 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                   <p className="text-sm">{question.title}</p>
                 )}
               </div>
-              {expandedQuestionIds.includes(question.id) ? (
+              {expandedQuestionIds.includes(question._id) ? (
                 <FontAwesomeIcon
                   icon={faMinus}
                   className="text-gray-400 cursor-pointer"
-                  onClick={() => handleQuestionClick(question.id)}
+                  onClick={() => handleQuestionClick(question._id)}
                 />
               ) : (
                 <FontAwesomeIcon
                   icon={faPlus}
                   className="text-gray-400 cursor-pointer"
-                  onClick={() => handleQuestionClick(question.id)}
+                  onClick={() => handleQuestionClick(question._id)}
                 />
               )}
             </div>
-            {expandedQuestionIds.includes(question.id) && (
+            {expandedQuestionIds.includes(question._id) && (
               <QuestionItem
                 question={question}
                 expandedQuestionIds={expandedQuestionIds}

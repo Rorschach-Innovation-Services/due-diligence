@@ -4,6 +4,7 @@ interface Question {
   id: string;
   title: string;
   contents: string[]; 
+  lastedited: Date;
 }
 
 interface Category extends Document {

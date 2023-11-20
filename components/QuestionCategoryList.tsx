@@ -5,13 +5,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import OptionsDropdown from "./OptionsDropdown";
 
 interface Question {
-  id: string;
+  _id: string;
   title: string;
   contents: string[];
 }
 
 interface Category {
-  id: string;
+  _id: string;
   name: string;
   questions: Array<Question>;
 }
@@ -43,7 +43,7 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
-    const selectedCategory = categories.find((cat) => cat.id === categoryId);
+    const selectedCategory = categories.find((cat) => cat._id === categoryId);
     onCategoryChange(selectedCategory);
   };
 
@@ -65,12 +65,12 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
 
       <div className="space-y-2 ml-1">
         {categories.map((cat) => (
-          <div key={cat.id} className="relative">
+          <div key={cat._id} className="relative">
             <div
-              className={`truncate flex items-center text-xs px-1 py-2 rounded ${cat.id === selectedCategoryId ? "bg-blue-500 text-white" : "hover:bg-blue-100 bg-gray-200"
+              className={`truncate flex items-center text-xs px-1 py-2 rounded ${cat._id === selectedCategoryId ? "bg-blue-500 text-white" : "hover:bg-blue-100 bg-gray-200"
                 } cursor-pointer `}
               style={{ whiteSpace: "nowrap", textOverflow: "ellipsis" }}
-              onClick={() => handleCategoryChange(cat.id)}
+              onClick={() => handleCategoryChange(cat._id)}
               title={cat.name} // Show full category name on hover
             >
               <p className="truncate">{cat.name.charAt(0).toUpperCase() + cat.name.slice(1).toLowerCase()}</p>

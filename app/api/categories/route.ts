@@ -27,16 +27,16 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
 
     if (id) {
       // Fetch a single category by ID
-      const category = await CategoryModel.findOne({ id: id }, { _id: 0 });
+      const category = await CategoryModel.findOne({ _id: id }, { _id: 0 });
 
       if (!category) {
-        return res.json({ error: 'Category not found' });
+        return Response.json({ error: 'Category not found' });
       }
 
       return Response.json({ category });
     } else {
       // Fetch all categories from the database
-      const categories = await CategoryModel.find({}, { id: 1, name: 1, _id: 0 });
+      const categories = await CategoryModel.find({}, { id: 1, name: 1, _id: 1 });
       return Response.json({ categories });
     }
   } catch (error) {
