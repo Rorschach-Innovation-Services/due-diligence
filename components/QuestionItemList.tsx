@@ -137,7 +137,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     // Fetch questions from the database based on the selected category's id
     const fetchQuestions = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/categories/questions?id=${selectedCategory?.id}`);
+        const response = await fetch(`/api/categories?id=${selectedCategory?.id}`);
         const data = await response.json();
 
         // Assuming the data structure is similar to what you provided in the Postman response

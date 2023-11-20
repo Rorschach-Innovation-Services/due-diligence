@@ -6,13 +6,39 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 connectToDatabase();
 // Endpoint for fetching all categories: /api/categories
+// export async function GET(req: NextApiRequest, res: NextApiResponse) {
+//   try {
+//     // Fetch all categories from the database
+//     const categories = await CategoryModel.find({}, {id: 1, name: 1, _id: 0});
+
+//     // Return the list of categories
+//     return Response.json({ categories });
+//   } catch (error) {
+//     // Handle errors
+//     console.error('Error fetching categories:', error);
+//     return Response.json({ error: 'Internal Server Error' });
+//   }
+// }
+
 export async function GET(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Fetch all categories from the database
-    const categories = await CategoryModel.find({}, {id: 1, name: 1, _id: 0});
+    const { searchParams } = new URL(req.url as string);
+    const id = searchParams.get('id');
 
-    // Return the list of categories
-    return Response.json({ categories });
+    if (id) {
+      // Fetch a single category by ID
+      const category = await CategoryModel.findOne({ id: id }, { _id: 0 });
+
+      if (!category) {
+        return res.json({ error: 'Category not found' });
+      }
+
+      return Response.json({ category });
+    } else {
+      // Fetch all categories from the database
+      const categories = await CategoryModel.find({}, { id: 1, name: 1, _id: 0 });
+      return Response.json({ categories });
+    }
   } catch (error) {
     // Handle errors
     console.error('Error fetching categories:', error);
