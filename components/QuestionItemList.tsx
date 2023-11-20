@@ -4,6 +4,7 @@ import { faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
 import { EditIcon } from "@/icons/EditIcon";
 import { DeleteIcon } from "@/icons/Delete";
 import AddQuestionButton from "@/buttons/AddQuestionButton";
+import AddAnswerButton from "@/buttons/AddAnswerButton";
 
 interface Question {
   id: string;
@@ -102,10 +103,19 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
           )}
         </div>
       ))}
+      <button className="italic text-xs text-blue-400 font-bold inline-flex items-center">
+        <FontAwesomeIcon icon={faPlus} className="mr-1" />
+        <span>New Answer</span>
+      </button>
+      <div className="w-full flex justify-end">
+        <button className="hover:bg-red-400 hover:text-white text-sm text-red-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-red-500 inline-flex items-center">
+          <DeleteIcon className="mr-2"/>
+          <span>Delete Question</span>
+        </button>
+      </div>
     </>
   );
 };
-
 
 interface Category {
   id: string;
@@ -121,6 +131,26 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   const [editTitleMode, setEditTitleMode] = useState(false);
   const [focusedQuestion, setFocusedQuestion] = useState<string | null>(null);
   const [contentEditMode, setContentEditMode] = useState<{ [key: string]: number | null }>({});
+  const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
+
+  useEffect(() => {
+    // Fetch questions from the database based on the selected category's id
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/categories/questions?id=${selectedCategory?.id}`);
+        const data = await response.json();
+
+        // Assuming the data structure is similar to what you provided in the Postman response
+        setQuestionsFromDb(data?.category?.questions || []);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+      }
+    };
+
+    if (selectedCategory?.id) {
+      fetchQuestions();
+    }
+  }, [selectedCategory]);
 
   useEffect(() => {
     // Collapse all questions when the selected category changes
@@ -128,37 +158,28 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   }, [selectedCategory]);
 
   useEffect(() => {
-    if (selectedCategory) {
+    if (questionsFromDb.length > 0) {
       const initialValues: { [key: string]: string[] } = {};
-
-      selectedCategory.questions.forEach((question) => {
+  
+      questionsFromDb.forEach((question) => {
         initialValues[question.id] = question.contents.map((content) => content);
       });
-
-      const initialTitleValues = selectedCategory.questions.reduce((acc, question) => {
+  
+      const initialTitleValues = questionsFromDb.reduce((acc, question) => {
         acc[question.id] = question.title;
         return acc;
       }, {} as { [key: string]: string });
-
-      console.log("Selected Category", selectedCategory);
+  
+      console.log("Questions from Database", questionsFromDb);
       console.log("Initial Content values", initialValues);
       console.log("Initial Title values", initialTitleValues);
-
+  
       setTextareaValues(initialValues);
       setTitleValues(initialTitleValues);
     }
-  }, [selectedCategory]);
+  }, [questionsFromDb]);
+  
 
-  // const handleQuestionClick = (questionId: string) => {
-  //   setExpandedQuestionIds((prevIds) => {
-  //     if (prevIds.includes(questionId)) {
-  //       return prevIds.filter((id) => id !== questionId);
-  //     } else {
-  //       return [...prevIds, questionId];
-  //     }
-  //   });
-  //   setFocusedQuestion(null); // Reset focused question
-  // };
   const handleQuestionClick = (questionId: string) => {
     setExpandedQuestionIds((prevIds) => {
       if (prevIds.includes(questionId)) {
@@ -172,10 +193,9 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     setFocusedQuestion(null); // Reset focused question
   };
 
-
   const handleToggleCollapseAll = () => {
     setCollapseAll(!collapseAll);
-    setExpandedQuestionIds(collapseAll ? [] : selectedCategory?.questions.map((q) => q.id) || []);
+    setExpandedQuestionIds(collapseAll ? [] : questionsFromDb.map((q) => q.id) || []);
     setFocusedQuestion(null); // Reset focused question
   };
 
@@ -191,17 +211,17 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   return (
     <div className="p-4">
       <div className="flex">
-        <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{width:"100%"}}>
+        <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
           {selectedCategory ? `${selectedCategory.name}` : "Category"}
         </h2>
       </div>
 
       <div className="space-y-4 relative">
         <button className="bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
-          <FontAwesomeIcon icon={faPlus} className="mr-2"/>
+          <FontAwesomeIcon icon={faPlus} className="mr-2" />
           <span>New Question</span>
         </button>
-        {selectedCategory?.questions.map((question: Question) => (
+        {questionsFromDb.map((question: Question) => (
           <div key={question.id} className="bg-white border p-4 rounded shadow">
             <div className="flex flex-3 justify-between items-center">
               <div className="flex w-full items-start ">

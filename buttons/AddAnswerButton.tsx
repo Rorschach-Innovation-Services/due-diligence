@@ -8,17 +8,17 @@ interface AddQuestionButtonProps {
     onClick: () => void;
 }
 
-const AddQuestionButton: React.FC<AddQuestionButtonProps> = ({ onClick }) => {
+const AddAnswerButton: React.FC<AddQuestionButtonProps> = ({ onClick }) => {
     return (
         <div
             className="flex inline-block items-center text-xs cursor-pointer hover:text-blue-300 focus:outline-none focus:ring focus:border-blue-300 my-4"
             onClick={onClick}
-            style={{ fontStyle: "italic", color: "blue" }}
+            style={{ fontStyle: "italic", alignSelf:"right"}}
         >
-            <PlusIcon className="mr-2" />
+            <PlusIcon className="mr-1 text-xs text-blue-300" />
             <p
-                className="italic"
-                style={{ color: "blue" }}
+                className="italic text-blue-300"
+                // style={{ color: "blue" }}
             >
                 New Answer
             </p>
@@ -26,4 +26,4 @@ const AddQuestionButton: React.FC<AddQuestionButtonProps> = ({ onClick }) => {
     );
 };
 
-export default AddQuestionButton;
+export default AddAnswerButton;

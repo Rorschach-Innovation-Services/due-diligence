@@ -1,5 +1,5 @@
 // components/QuestionCategoryList.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { faEllipsisH, faEllipsisV, faPencilAlt, faShare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import OptionsDropdown from "./OptionsDropdown";
@@ -21,83 +21,25 @@ interface QuestionCategoryListProps {
 }
 
 export default function QuestionCategoryList({ onCategoryChange }: QuestionCategoryListProps) {
-  const categories: Category[] = [
-    {
-      id: '1',
-      name: 'QUESTIONS RELATING TO THE UCT’S OVERALL GOVERNANCE STRUCTURE & GENERAL GOVERNANCE ISSUES',
-      questions: [
-        {
-          id: '1',
-          title: 'What is the legal status of the organisation?',
-          contents: ['The University of Cape Town (UCT) is a university incorporated in accordance with the Higher Education Act, 101 of 1997...', "Second answer", "THree eee"],
-        },
-        {
-          id: '2',
-          title: 'What is the registration number and name of the registration body with which your organisation is registered?',
-          contents: ['N/A', "Second answer"],
-        },
-        {
-          id: '3',
-          title: 'Is your organisation affiliated with another organisation?',
-          contents: ['No.', "Second answer"],
-        },
-        {
-          id: '4',
-          title: 'Who is the head of your organisation and what is his/her job title?',
-          contents: ['Professor Daya Reddy, [Interim] Vice-Chancellor [For US funding applications, it is appropriate to add that in South Africa the Vice-Chancellor is the equivalent of the President of an American university.]', "Second answer"],
-        },
-        {
-          id: '5',
-          title: 'Describe the corporate governance of the university.',
-          contents: ['The University is governed by a 30-member Council, which consists of the executive officers, other employees of the institution, students and persons not members of staff or students of the institution...', "Second answer"],
-        },
-        {
-          id: '6',
-          title: 'Please provide an organogram that shows the structure of your organisation (including the main executive and non-executive governance boards) and indicate the main board(s) for governance of research.',
-          contents: ['[Insert organogram]', "Second answer"],
-        },
-        {
-          id: '7',
-          title: 'Please provide a list or a link of current members of the governing board (at UCT the ‘governing board’ = Council)',
-          contents: ['The current members of the UCT Council can be viewed here: [Link]', "Second answer"],
-        },
-        {
-          id: '8',
-          title: 'Does the organization have a policy that demonstrates its governance structure in all its grant applications?',
-          contents: ['The University has clear procedures to be followed in regard to the application for grants, the management of grants once they are awarded, and the close-out of grants...', "Second answer"],
-        },
-        {
-          id: '9',
-          title: 'Please provide a breakdown of the number of staff in your organisation for categories (i) permanent staff and (ii) temporary staff:',
-          contents: ['Permanent: 4,984 (1,264 academic, 3,698 professional, administrative support and service, and 22 external); temporary: +- 1,670...', "Second answer"],
-        },
-        {
-          id: '10',
-          title: 'Does the organization have a process that defines the frequency of meetings of its governing board?',
-          contents: ['Yes. The Council meets 4 times per year and the Executive Committee of Council meets 6 times per year. See the UCT Calendar of Meetings.', "Second answer"],
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Questions relating specifically to the governance of the research enterprise at UCT',
-      questions: [
-        {
-          id: '1',
-          title: 'How are you?',
-          contents: ['Nothing to say.... i i i do not want to talk', "Second answer"],
-        },
-        {
-          id: '2',
-          title: 'How many?',
-          contents: ['Thousands and thousands of them', "Second answer"],
-        },
-      ],
-    },
-  ];
-
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [showOptions, setShowOptions] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        const data = await response.json();
+        console.log("DATA", data.categories)
+        setCategories(data.categories || []); // Ensure data.data is an array or default to an empty array
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        // Handle error if needed
+      }
+    };
+
+    fetchCategories();
+  }, []); // Empty dependency array to fetch data only once
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -116,7 +58,7 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
     // Close the options when clicking outside the options card
     setShowOptions(null);
   };
-
+  console.log("Data outside", categories)
   return (
     <div className="p-4">
       <h2 className="text-sm font-semibold mb-2">Overview of FAQ</h2>
@@ -125,29 +67,14 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
         {categories.map((cat) => (
           <div key={cat.id} className="relative">
             <div
-              className={`flex items-center text-xs px-1 py-2 rounded ${cat.id === selectedCategoryId ? "bg-blue-500 text-white" : "hover:bg-blue-100 bg-gray-200"
-                } cursor-pointer overflow-hidden`}
+              className={`truncate flex items-center text-xs px-1 py-2 rounded ${cat.id === selectedCategoryId ? "bg-blue-500 text-white" : "hover:bg-blue-100 bg-gray-200"
+                } cursor-pointer `}
               style={{ whiteSpace: "nowrap", textOverflow: "ellipsis" }}
               onClick={() => handleCategoryChange(cat.id)}
               title={cat.name} // Show full category name on hover
             >
-              {cat.name.charAt(0).toUpperCase() + cat.name.slice(1).toLowerCase()}
-
-              {/* {cat.id === selectedCategoryId && (
-                <div
-                  className="absolute top-2 right-0 bottom-0 mr-2 cursor-pointer"
-                  onClick={() => setShowOptions(showOptions === cat.id ? null : cat.id)}
-                >
-                  <FontAwesomeIcon icon={faEllipsisV} className="text-gray-600" />
-                </div>
-              )} */}
+              <p className="truncate">{cat.name.charAt(0).toUpperCase() + cat.name.slice(1).toLowerCase()}</p>
             </div>
-            <OptionsDropdown
-              categoryId={cat.id}
-              isOpen={showOptions === cat.id}
-              onOptionClick={handleOptionClick}
-              onClose={handleCloseOptions}
-            />
           </div>
         ))}
       </div>
