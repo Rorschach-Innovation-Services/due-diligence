@@ -7,16 +7,15 @@ export default function Navbar() {
     <nav className="flex items-center justify-between p-6 bg-white border-b border-gray-300">
 
       {/* <div> */}
-        <SearchBar placeholder='Search Q and As' />
+      <SearchBar placeholder='Search Q and As' />
       {/* </div> */}
 
-      <div className="space-x-6 mt-2">
-        {/* nav links */}
+      <div className="space-x-6 flex  align-center">
         <Link href="/">
           Questions
-        </Link>  
+        </Link>
         <Link href="/about">
-        About
+          About
         </Link>
       </div>
     </nav>

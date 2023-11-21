@@ -41,7 +41,20 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
     fetchCategories();
   }, []); // Empty dependency array to fetch data only once
 
+  useEffect(() => {
+    // Load the selected category from localStorage on component mount
+    const storedCategoryId = localStorage.getItem("selectedCategoryId");
+    if (storedCategoryId && categories.find((cat) => cat._id === storedCategoryId)) {
+      setSelectedCategoryId(storedCategoryId);
+      const selectedCategory = categories.find((cat) => cat._id === storedCategoryId);
+      onCategoryChange(selectedCategory);
+    }
+  }, [categories, onCategoryChange]);
+
   const handleCategoryChange = (categoryId: string) => {
+    // Save the selected category to localStorage
+    localStorage.setItem("selectedCategoryId", categoryId);
+
     setSelectedCategoryId(categoryId);
     const selectedCategory = categories.find((cat) => cat._id === categoryId);
     onCategoryChange(selectedCategory);

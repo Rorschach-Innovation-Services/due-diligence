@@ -5,6 +5,7 @@ import { EditIcon } from "@/icons/EditIcon";
 import { DeleteIcon } from "@/icons/Delete";
 import AddQuestionButton from "@/buttons/AddQuestionButton";
 import AddAnswerButton from "@/buttons/AddAnswerButton";
+import $ from 'jquery';
 
 interface Question {
   _id: string;
@@ -20,6 +21,7 @@ interface QuestionItemProps {
   setTextareaValues: React.Dispatch<React.SetStateAction<{ [key: string]: string[] | undefined }>>;
   contentEditMode: { [key: string]: number | null };
   setContentEditMode: React.Dispatch<React.SetStateAction<{ [key: string]: number | null }>>;
+  onDeleteQuestion: (questionId: string) => void; // Added prop for handling question deletion
 }
 
 const QuestionItem: React.FC<QuestionItemProps> = ({
@@ -30,6 +32,8 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   setTextareaValues,
   contentEditMode,
   setContentEditMode,
+  onDeleteQuestion, // Added prop for handling question deletion
+
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -46,6 +50,10 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
       return newEditModes;
     });
   };
+  const handleDeleteClick = async () => {
+    // Call the passed function to handle the deletion
+    onDeleteQuestion(question._id);
+  };
 
   const handleTextareaBlur = () => {
     // Update textareaValues with the latest content
@@ -61,6 +69,8 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
       textareaRef.current.focus();
     }
   }, [contentEditMode, question._id]);
+
+
 
   return (
     <>
@@ -108,8 +118,8 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
         <span>New Answer</span>
       </button>
       <div className="w-full flex justify-end">
-        <button className="hover:bg-red-400 hover:text-white text-sm text-red-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-red-500 inline-flex items-center">
-          <DeleteIcon className="mr-2"/>
+        <button onClick={handleDeleteClick} className="hover:bg-red-400 hover:text-white text-sm text-red-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-red-500 inline-flex items-center">
+          <DeleteIcon className="mr-2" />
           <span>Delete Question</span>
         </button>
       </div>
@@ -132,13 +142,20 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   const [focusedQuestion, setFocusedQuestion] = useState<string | null>(null);
   const [contentEditMode, setContentEditMode] = useState<{ [key: string]: number | null }>({});
   const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
+  const [newQuestion, setNewQuestion] = useState("");
+
+
+
 
   useEffect(() => {
     // Fetch questions from the database based on the selected category's id
     const fetchQuestions = async () => {
       try {
-        const response = await fetch(`/api/categories?id=${selectedCategory?._id}`);
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories?id=${selectedCategory?._id}&sort={_id: -1}`);
         const data = await response.json();
+
+        console.log("SOrted Qs", data)
 
 
         // Assuming the data structure is similar to what you provided in the Postman response
@@ -161,25 +178,25 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   useEffect(() => {
     if (questionsFromDb.length > 0) {
       const initialValues: { [key: string]: string[] } = {};
-  
+
       questionsFromDb.forEach((question) => {
         initialValues[question._id] = question.contents.map((content) => content);
       });
-  
+
       const initialTitleValues = questionsFromDb.reduce((acc, question) => {
         acc[question._id] = question.title;
         return acc;
       }, {} as { [key: string]: string });
-  
+
       // console.log("Questions from Database", questionsFromDb);
       // console.log("Initial Content values", initialValues);
       // console.log("Initial Title values", initialTitleValues);
-  
+
       setTextareaValues(initialValues);
       setTitleValues(initialTitleValues);
     }
   }, [questionsFromDb]);
-  
+
 
   const handleQuestionClick = (questionId: string) => {
     setExpandedQuestionIds((prevIds) => {
@@ -209,6 +226,99 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     setEditTitleMode(false);
   };
 
+  const handleNewQuestionClick = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+
+        console.log("AFter Adding:", data);
+        const newQuestion = data.newQuestion;
+        if (newQuestion) {
+          // Update the state with the new question
+          setQuestionsFromDb((prevQuestions) => [...prevQuestions, newQuestion]);
+          setExpandedQuestionIds((prevIds) => [...prevIds, newQuestion._id]);
+
+          console.log("Lastedited =", newQuestion.lastedited);
+          
+        //   {
+        //     "id": "none",
+        //     "title": "",
+        //     "contents": [],
+        //     "lastedited": 1700593198440
+        // }
+
+          const newQUestionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`, {
+            method: 'GET',
+          });
+          console.log("Question data =", newQUestionResponse);
+          
+          if (newQUestionResponse.ok) {
+            const info = await newQUestionResponse.json();
+            // console.log("Question data =", info);
+            
+            // console.log("New ID", newQuestion.lastedited)
+            setNewQuestion(newQuestion.lastedited);
+          }
+          
+          // You may also handle other state updates or UI changes as needed
+        } else {
+          console.error('Invalid response format:', data);
+        }
+
+        // You may also handle other state updates or UI changes as needed
+      } else {
+        console.error('Failed to create a new question:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error creating a new question:', error);
+    }
+  };
+
+  const handleDeleteQuestion = async (questionId: string) => {
+    console.log("Delete ID", newQuestion)
+
+    
+    try {
+
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&questionId=${questionId}`
+      if (newQuestion){
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}`
+      }
+
+      console.log(url)
+      const response = await fetch( url, {
+        method: 'DELETE',
+      });
+
+      console.log("resp = ", response)
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Assuming the response includes the updated category data
+        const updatedCategory = data.updatedCategory;
+
+        console.log("AFter Delete:", data);
+
+        // Update the state with the updated category data
+        setQuestionsFromDb(updatedCategory.questions);
+        setExpandedQuestionIds((prevIds) => prevIds.filter((id) => id !== questionId));
+
+        setNewQuestion("") // reset the state after delete;
+
+      } else {
+        console.error('Failed to delete the question:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error deleting the question:', error);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="flex">
@@ -218,75 +328,79 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       </div>
 
       <div className="space-y-4 relative">
-        <button className="bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
+        <button onClick={handleNewQuestionClick} className="bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           <span>New Question</span>
         </button>
-        {questionsFromDb.map((question: Question) => (
-          <div key={question._id} className="bg-white border p-4 rounded shadow">
-            <div className="flex flex-3 justify-between items-center">
-              <div className="flex w-full items-start ">
-                {expandedQuestionIds.includes(question._id) ? (
-                  <div className="mr-2 flex w-full cursor-pointer">
-                    <div className="flex w-full items-start">
-                      {editTitleMode && focusedQuestion === question._id ? (
-                        <div className="mr-2 flex items-center cursor-pointer">
-                          <FontAwesomeIcon icon={faSave} className="mr-2 text-blue-500" />
-                        </div>
-                      ) : (
-                        <div className="mr-2 cursor-pointer" onClick={() => handleEditTitleClick(question._id)}>
-                          <EditIcon className={`text-gray-300 text-bold`} />
-                        </div>
-                      )}
+        {questionsFromDb.slice()
+          .sort((a, b) => b._id.localeCompare(a._id))
+          .map((question: Question) => (
+            <div key={question._id} className="bg-white border p-4 rounded shadow">
+              <div className="flex flex-3 justify-between items-center">
+                <div className="flex w-full items-start ">
+                  {expandedQuestionIds.includes(question._id) ? (
+                    <div className="mr-2 flex w-full cursor-pointer">
+                      <div className="flex w-full items-start">
+                        {editTitleMode && focusedQuestion === question._id ? (
+                          <div className="mr-2 flex items-center cursor-pointer">
+                            <FontAwesomeIcon icon={faSave} className="mr-2 text-blue-500" />
+                          </div>
+                        ) : (
+                          <div className="mr-2 cursor-pointer" onClick={() => handleEditTitleClick(question._id)}>
+                            <EditIcon className={`text-gray-300 text-bold`} />
+                          </div>
+                        )}
 
-                      <textarea
-                        className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editTitleMode && focusedQuestion === question._id ? "border-green-500 border-1" : ""
-                          }`}
-                        value={titleValues[question._id] || ""}
-                        readOnly={!editTitleMode || !expandedQuestionIds.includes(question._id)}
-                        onChange={(e) => {
-                          setTitleValues((prevValues) => ({
-                            ...prevValues,
-                            [question._id]: e.target.value,
-                          }));
-                        }}
-                        rows={3}
-                        style={{ marginRight: "8px" }}
-                        onBlur={handleTitleInputBlur}
-                      />
+                        <textarea
+                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editTitleMode && focusedQuestion === question._id ? "border-green-500 border-1" : ""
+                            }`}
+                          value={titleValues[question._id] || ""}
+                          readOnly={!editTitleMode || !expandedQuestionIds.includes(question._id)}
+                          onChange={(e) => {
+                            setTitleValues((prevValues) => ({
+                              ...prevValues,
+                              [question._id]: e.target.value,
+                            }));
+                          }}
+                          rows={3}
+                          style={{ marginRight: "8px" }}
+                          onBlur={handleTitleInputBlur}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <p className="text-sm">{question.title}</p>
+                  )}
+                </div>
+                {expandedQuestionIds.includes(question._id) ? (
+                  <FontAwesomeIcon
+                    icon={faMinus}
+                    className="text-gray-400 cursor-pointer"
+                    onClick={() => handleQuestionClick(question._id)}
+                  />
                 ) : (
-                  <p className="text-sm">{question.title}</p>
+                  <FontAwesomeIcon
+                    icon={faPlus}
+                    className="text-gray-400 cursor-pointer"
+                    onClick={() => handleQuestionClick(question._id)}
+                  />
                 )}
               </div>
-              {expandedQuestionIds.includes(question._id) ? (
-                <FontAwesomeIcon
-                  icon={faMinus}
-                  className="text-gray-400 cursor-pointer"
-                  onClick={() => handleQuestionClick(question._id)}
-                />
-              ) : (
-                <FontAwesomeIcon
-                  icon={faPlus}
-                  className="text-gray-400 cursor-pointer"
-                  onClick={() => handleQuestionClick(question._id)}
+              {expandedQuestionIds.includes(question._id) && (
+                <QuestionItem
+                  key={question.title}
+                  question={question}
+                  expandedQuestionIds={expandedQuestionIds}
+                  textareaValues={textareaValues}
+                  setExpandedQuestionIds={setExpandedQuestionIds}
+                  setTextareaValues={setTextareaValues}
+                  contentEditMode={contentEditMode}
+                  setContentEditMode={setContentEditMode}
+                  onDeleteQuestion={handleDeleteQuestion} // Pass the deletion handler
                 />
               )}
             </div>
-            {expandedQuestionIds.includes(question._id) && (
-              <QuestionItem
-                question={question}
-                expandedQuestionIds={expandedQuestionIds}
-                textareaValues={textareaValues}
-                setExpandedQuestionIds={setExpandedQuestionIds}
-                setTextareaValues={setTextareaValues}
-                contentEditMode={contentEditMode}
-                setContentEditMode={setContentEditMode}
-              />
-            )}
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 interface Question {
-  id: string;
+  lastedited: string;
   title: string;
   contents: string[]; 
-  lastedited: Date;
+  // name: string;
 }
 
 interface Category extends Document {
@@ -14,9 +14,10 @@ interface Category extends Document {
 }
 
 const questionSchema = new Schema<Question>({
-  id: { type: String, required: false },
+  lastedited: { type: String, required: false },
   title: { type: String, required: false },
   contents: { type: [String], required: false }, 
+  // name: { type: String, required: true },
 });
 
 const categorySchema = new Schema<Category>({

@@ -3,49 +3,44 @@ import connectToDatabase from '@/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
+
 connectToDatabase();
 
+export async function GET(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { searchParams } = new URL(req.url as string);
+    const categoryId = searchParams.get('categoryId');
+    const questionId = "none"; // Recently added question will have a none ID
 
-// export async function POST(req: NextApiRequest, res: NextApiResponse) {
-//   try {
-//     const { searchParams } = new URL(req.url as string);
-//     const categoryId = searchParams.get('categoryId');
+    // Ensure categoryId and questionId are provided
+    if (!categoryId || !questionId) {
+      return Response.json({ error: 'Category ID and Question ID are required' });
+    }
 
-//     // Ensure categoryId is provided
-//     if (!categoryId) {
-//       return Response.json({ error: 'Category ID is required' });
-//     }
+    // Find the category by ID
+    const category = await CategoryModel.findOne({ _id: categoryId });
 
-//     const { title, contents } = req.body;
 
-//     // Find the category by ID
-//     const category = await CategoryModel.findOne({ _id: categoryId });
 
-//     // Check if the category is not found
-//     if (!category) {
-//       return Response.json({ error: 'Category not found' });
-//     }
+    // Check if the category is not found
+    if (!category) {
+      return Response.json({ error: 'Category not found' });
+    }
 
-//     // Create a new question
-//     const newQuestion = {
-//       id: generateUniqueId(), // Assume you have a function to generate a unique ID
-//       title,
-//       contents,
-//     };
+    // Find the question by ID in the category's questions array
+    const question = category.questions.find((q: { id: string; }) => q.id == questionId);
 
-//     // Add the new question to the category
-//     category.questions.push(newQuestion);
+    // Check if the question is not found
+    if (!question) {
+      return Response.json({ error: 'Question not found in the category' });
+    }
 
-//     // Save the updated category
-//     const updatedCategory = await category.save();
-
-//     return Response.json({ updatedCategory });
-//   } catch (error) {
-//     console.error('Error creating question:', error);
-//     return Response.json({ error: 'Internal Server Error' });
-//   }
-// }
-
+    return Response.json({ question });
+  } catch (error) {
+    console.error('Error fetching question:', error);
+    return Response.json({ error: 'Internal Server Error' });
+  }
+}
 
 export async function PUT(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -99,18 +94,16 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-function generateUniqueId() {
-  throw new Error('Function not implemented.');
-}
 
 export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
     const questionId = searchParams.get('questionId');
+    const lastedited = searchParams.get('lastedited');
 
     // Ensure categoryId and questionId are provided
-    if (!categoryId || !questionId) {
+    if (!categoryId) {
       return Response.json({ error: 'Category ID and Question ID are required' });
     }
 
@@ -122,8 +115,22 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ error: 'Category not found' });
     }
 
+    
     // Find the index of the question in the category's questions array
-    const questionIndex = category.questions.findIndex((q: { _id: string | string[]; }) => q._id == questionId);
+
+    let questionIndex
+    
+    if (lastedited) {
+      
+      questionIndex = category.questions.findIndex((q: {
+        lastedited: string; _id: string | string[];
+      }) => q.lastedited == lastedited);
+
+      console.log("resp", questionIndex)
+    }else{
+      console.log("Cate....", questionId)
+      questionIndex = category.questions.findIndex((q: { _id: string | string[]; }) => q._id == questionId);
+    }
 
     // Check if the question is not found
     if (questionIndex === -1) {
@@ -149,6 +156,7 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
+    console.log("Cat ID:", searchParams)
 
     // Ensure categoryId is provided
     if (!categoryId) {
@@ -168,8 +176,9 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
       id: "none", // Assume you have a function to generate a unique ID
       title: '',
       contents: [],
-      lastedited: Date.now(),
+      lastedited: new Date().toISOString(),
     };
+
 
     // Add the new question to the category
     category.questions.push(newQuestion);
@@ -177,9 +186,24 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     // Save the updated category
     const updatedCategory = await category.save();
 
-    return Response.json({ updatedCategory });
+    const questions = await fetchQuestions(categoryId);
+
+    console.log("New Question:", newQuestion)
+
+    return Response.json({ newQuestion });
   } catch (error) {
     console.error('Error creating question:', error);
     return Response.json({ error: 'Internal Server Error' });
   }
 }
+
+const fetchQuestions = async (categoryId: string) => {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories?id=${categoryId}`);
+    const data = await response.json();
+    return data?.category?.questions || [];
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    return [];
+  }
+};
