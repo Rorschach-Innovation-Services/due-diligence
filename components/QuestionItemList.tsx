@@ -6,6 +6,7 @@ import { DeleteIcon } from "@/icons/Delete";
 import AddQuestionButton from "@/buttons/AddQuestionButton";
 import AddAnswerButton from "@/buttons/AddAnswerButton";
 import $ from 'jquery';
+// import QuestionItem from "./QuestionItem";
 
 interface Question {
   _id: string;
@@ -21,7 +22,8 @@ interface QuestionItemProps {
   setTextareaValues: React.Dispatch<React.SetStateAction<{ [key: string]: string[] | undefined }>>;
   contentEditMode: { [key: string]: number | null };
   setContentEditMode: React.Dispatch<React.SetStateAction<{ [key: string]: number | null }>>;
-  onDeleteQuestion: (questionId: string) => void; // Added prop for handling question deletion
+  onDeleteQuestion: (questionId: string) => void;
+  onUpdateQuestion: (questionId: string) => void;
 }
 
 const QuestionItem: React.FC<QuestionItemProps> = ({
@@ -32,27 +34,32 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   setTextareaValues,
   contentEditMode,
   setContentEditMode,
-  onDeleteQuestion, // Added prop for handling question deletion
-
+  onDeleteQuestion,
+  onUpdateQuestion,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleEditClick = (contentIndex: number) => {
+  const handleUniversalEditClick = () => {
+    // Toggle edit mode for title and all content items in the current question
     setContentEditMode((prevEditModes) => {
       const currentEditMode = prevEditModes[question._id];
-
-      // Toggle edit mode for the clicked content
       const newEditModes = {
         ...prevEditModes,
-        [question._id]: currentEditMode === contentIndex ? null : contentIndex,
+        [question._id]: currentEditMode === null ? 0 : null, // Toggle between null and 0
       };
 
       return newEditModes;
     });
   };
+
   const handleDeleteClick = async () => {
     // Call the passed function to handle the deletion
     onDeleteQuestion(question._id);
+  };
+
+  const handleUpdateClick = async () => {
+    // Call the passed function to handle the deletion
+    onUpdateQuestion(question._id);
   };
 
   const handleTextareaBlur = () => {
@@ -65,15 +72,18 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
 
   useEffect(() => {
     // Focus on the textarea when entering edit mode
-    if (textareaRef.current && contentEditMode[question._id] !== null) {
+    if (textareaRef.current) {
       textareaRef.current.focus();
     }
   }, [contentEditMode, question._id]);
 
-
-
   return (
     <>
+      {/* <button onClick={handleUniversalEditClick} className="italic text-xs text-blue-400 font-bold inline-flex items-center mb-2">
+        <EditIcon />
+        <span>Enable Edit</span>
+      </button> */}
+
       {question.contents.map((content, index) => (
         <div
           key={index}
@@ -82,17 +92,15 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
             } rounded text-sm`}
           style={{ width: "100%" }}
         >
-          <div className="mr-2 cursor-pointer" onClick={() => handleEditClick(index)}>
+          {/* <div className="mr-2 cursor-pointer">
             <EditIcon className={`text-${contentEditMode[question._id] === index ? "gray" : "blue"}-500`} />
-          </div>
+          </div> */}
           <textarea
             ref={textareaRef}
             className={`flex-1 outline-none border-none bg-transparent resize-none ${contentEditMode[question._id] === index ? " focus:border-gray-500" : ""
               }`}
             value={(textareaValues[question._id] || [])[index] || ""}
-            readOnly={
-              contentEditMode[question._id] !== index
-            }
+            readOnly={contentEditMode[question._id] === null}
             onChange={(e) => {
               const newTextareaValues = { ...textareaValues };
               newTextareaValues[question._id] = newTextareaValues[question._id] || [];
@@ -106,26 +114,34 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
             style={{ marginRight: "8px" }}
             onBlur={handleTextareaBlur}
           />
-          {expandedQuestionIds.includes(question._id) && (
-            <div className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" onClick={() => handleEditClick(index)}>
-              <DeleteIcon className="text-gray-400 hover:text-red-400" />
-            </div>
-          )}
         </div>
       ))}
-      <button className="italic text-xs text-blue-400 font-bold inline-flex items-center">
+
+      <button
+        onClick={() => {
+
+        }}
+        className="italic text-xs text-blue-400 font-bold inline-flex items-center mt-2"
+      >
         <FontAwesomeIcon icon={faPlus} className="mr-1" />
         <span>New Answer</span>
       </button>
+
       <div className="w-full flex justify-end">
+        <button onClick={handleUpdateClick} className="mr-2 hover:bg-green-400 hover:text-white text-sm text-green-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-green-500 inline-flex items-center">
+          {/* <DeleteIcon className="mr-2" /> */}
+          <span>Save Changes</span>
+        </button>
         <button onClick={handleDeleteClick} className="hover:bg-red-400 hover:text-white text-sm text-red-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-red-500 inline-flex items-center">
           <DeleteIcon className="mr-2" />
           <span>Delete Question</span>
         </button>
+
       </div>
     </>
   );
 };
+
 
 interface Category {
   _id: string;
@@ -138,25 +154,44 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   const [collapseAll, setCollapseAll] = useState(false);
   const [textareaValues, setTextareaValues] = useState<{ [key: string]: string[] | undefined }>({});
   const [titleValues, setTitleValues] = useState<{ [key: string]: string }>({});
-  const [editTitleMode, setEditTitleMode] = useState(false);
+  // const [editTitleMode, setEditTitleMode] = useState(false);
   const [focusedQuestion, setFocusedQuestion] = useState<string | null>(null);
   const [contentEditMode, setContentEditMode] = useState<{ [key: string]: number | null }>({});
   const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
   const [newQuestion, setNewQuestion] = useState("");
 
+  const handleEditAllClick = () => {
+    // Enable editing on all textareas, including the question title
+    setContentEditMode((prevEditMode) => {
+      const newEditMode: { [key: string]: number | null } = {};
 
+      Object.keys(textareaValues).forEach((questionId) => {
+        newEditMode[questionId] = prevEditMode[questionId] !== null ? null : 0;
+      });
 
+      // Toggle edit mode for the question title
+      newEditMode.title = prevEditMode.title !== null ? null : 0;
+
+      return newEditMode;
+    });
+
+    // Set the currently focused question to null to reset the focus
+    setFocusedQuestion(null);
+  };
+  
+  const handleEditTitleClick = (questionId: string) => {
+    setFocusedQuestion(questionId); // Set the currently focused question
+    // setEditTitleMode(true);
+  };
 
   useEffect(() => {
     // Fetch questions from the database based on the selected category's id
     const fetchQuestions = async () => {
       try {
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories?id=${selectedCategory?._id}&sort={_id: -1}`);
         const data = await response.json();
 
-        console.log("SOrted Qs", data)
-
+        console.log("Sorted Qs", data);
 
         // Assuming the data structure is similar to what you provided in the Postman response
         setQuestionsFromDb(data?.category?.questions || []);
@@ -188,15 +223,10 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
         return acc;
       }, {} as { [key: string]: string });
 
-      // console.log("Questions from Database", questionsFromDb);
-      // console.log("Initial Content values", initialValues);
-      // console.log("Initial Title values", initialTitleValues);
-
       setTextareaValues(initialValues);
       setTitleValues(initialTitleValues);
     }
   }, [questionsFromDb]);
-
 
   const handleQuestionClick = (questionId: string) => {
     setExpandedQuestionIds((prevIds) => {
@@ -217,13 +247,10 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     setFocusedQuestion(null); // Reset focused question
   };
 
-  const handleEditTitleClick = (questionId: string) => {
-    setFocusedQuestion(questionId); // Set the currently focused question
-    setEditTitleMode(true);
-  };
+
 
   const handleTitleInputBlur = () => {
-    setEditTitleMode(false);
+    // setEditTitleMode(false);
   };
 
   const handleNewQuestionClick = async () => {
@@ -235,8 +262,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       if (response.ok) {
         const data = await response.json();
 
-
-        console.log("AFter Adding:", data);
+        console.log("After Adding:", data);
         const newQuestion = data.newQuestion;
         if (newQuestion) {
           // Update the state with the new question
@@ -244,33 +270,20 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
           setExpandedQuestionIds((prevIds) => [...prevIds, newQuestion._id]);
 
           console.log("Lastedited =", newQuestion.lastedited);
-          
-        //   {
-        //     "id": "none",
-        //     "title": "",
-        //     "contents": [],
-        //     "lastedited": 1700593198440
-        // }
 
-          const newQUestionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`, {
+          const newQuestionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`, {
             method: 'GET',
           });
-          console.log("Question data =", newQUestionResponse);
-          
-          if (newQUestionResponse.ok) {
-            const info = await newQUestionResponse.json();
-            // console.log("Question data =", info);
-            
-            // console.log("New ID", newQuestion.lastedited)
+
+          console.log("Question data =", newQuestionResponse);
+
+          if (newQuestionResponse.ok) {
+            const info = await newQuestionResponse.json();
             setNewQuestion(newQuestion.lastedited);
           }
-          
-          // You may also handle other state updates or UI changes as needed
         } else {
           console.error('Invalid response format:', data);
         }
-
-        // You may also handle other state updates or UI changes as needed
       } else {
         console.error('Failed to create a new question:', response.statusText);
       }
@@ -280,22 +293,15 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    console.log("Delete ID", newQuestion)
-
-    
     try {
-
-      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&questionId=${questionId}`
-      if (newQuestion){
-        url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}`
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&questionId=${questionId}`;
+      if (newQuestion) {
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}`;
       }
 
-      console.log(url)
-      const response = await fetch( url, {
+      const response = await fetch(url, {
         method: 'DELETE',
       });
-
-      console.log("resp = ", response)
 
       if (response.ok) {
         const data = await response.json();
@@ -303,14 +309,54 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
         // Assuming the response includes the updated category data
         const updatedCategory = data.updatedCategory;
 
-        console.log("AFter Delete:", data);
+        console.log("After Delete:", data);
 
         // Update the state with the updated category data
         setQuestionsFromDb(updatedCategory.questions);
         setExpandedQuestionIds((prevIds) => prevIds.filter((id) => id !== questionId));
 
-        setNewQuestion("") // reset the state after delete;
+        setNewQuestion(""); // reset the state after delete;
+      } else {
+        console.error('Failed to delete the question:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error deleting the question:', error);
+    }
+  };
+  const handleUpdateQuestion = async (questionId: string) => {
+    try {
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&questionId=${questionId}`;
+      if (newQuestion) {
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}`;
+      }
 
+
+      console.log("Ttile values:", titleValues[questionId])
+      console.log("Content values:", textareaValues[questionId] || [])
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: titleValues[questionId],
+          contents: textareaValues[questionId] || [],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Assuming the response includes the updated category data
+        const updatedCategory = data.updatedCategory;
+
+        console.log("After Delete:", data);
+
+        // Update the state with the updated category data
+        setQuestionsFromDb(updatedCategory.questions);
+        setExpandedQuestionIds((prevIds) => prevIds.filter((id) => id !== questionId));
+
+        setNewQuestion(""); // reset the state after delete;
       } else {
         console.error('Failed to delete the question:', response.statusText);
       }
@@ -322,16 +368,17 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   return (
     <div className="p-4">
       <div className="flex">
-        <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
-          {selectedCategory ? `${selectedCategory.name}` : "Category"}
-        </h2>
-      </div>
-
-      <div className="space-y-4 relative">
         <button onClick={handleNewQuestionClick} className="bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           <span>New Question</span>
         </button>
+        <button onClick={handleEditAllClick} className="italic text-xs text-blue-400 font-bold inline-flex items-center mb-2">
+          <EditIcon />
+          <span>Enable Edit</span>
+        </button>
+      </div>
+
+      <div className="space-y-4 relative">
         {questionsFromDb.slice()
           .sort((a, b) => b._id.localeCompare(a._id))
           .map((question: Question) => (
@@ -341,21 +388,14 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                   {expandedQuestionIds.includes(question._id) ? (
                     <div className="mr-2 flex w-full cursor-pointer">
                       <div className="flex w-full items-start">
-                        {editTitleMode && focusedQuestion === question._id ? (
-                          <div className="mr-2 flex items-center cursor-pointer">
-                            <FontAwesomeIcon icon={faSave} className="mr-2 text-blue-500" />
-                          </div>
-                        ) : (
-                          <div className="mr-2 cursor-pointer" onClick={() => handleEditTitleClick(question._id)}>
-                            <EditIcon className={`text-gray-300 text-bold`} />
-                          </div>
-                        )}
-
+                        {/* <div className="mr-2 cursor-pointer" onClick={() => handleEditTitleClick(question._id)}>
+                          <EditIcon className={`text-gray-300 text-bold`} />
+                        </div> */}
                         <textarea
-                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editTitleMode && focusedQuestion === question._id ? "border-green-500 border-1" : ""
-                            }`}
+                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${contentEditMode[question._id] === 0 ? "border-green-500 border-1" : ""
+                        }`}
                           value={titleValues[question._id] || ""}
-                          readOnly={!editTitleMode || !expandedQuestionIds.includes(question._id)}
+                          readOnly={contentEditMode[question._id] === null}
                           onChange={(e) => {
                             setTitleValues((prevValues) => ({
                               ...prevValues,
@@ -397,6 +437,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                   contentEditMode={contentEditMode}
                   setContentEditMode={setContentEditMode}
                   onDeleteQuestion={handleDeleteQuestion} // Pass the deletion handler
+                  onUpdateQuestion={handleUpdateQuestion}
                 />
               )}
             </div>
