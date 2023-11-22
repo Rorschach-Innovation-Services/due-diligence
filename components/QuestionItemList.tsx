@@ -87,8 +87,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
       {question.contents.map((content, index) => (
         <div
           key={index}
-          className={`flex items-start justify-start mt-2 relative p-4 ${contentEditMode[question._id] === index ? "bg-gray-100" : "bg-blue-50"
-            } border ${contentEditMode[question._id] === index ? "border-gray-500" : "border-blue-500"
+          className={`flex items-start justify-start mt-2 relative p-4 ${Object.values(contentEditMode).some((value) => value !== null) ? "bg-gray-100" : "bg-blue-50"} border ${contentEditMode[question._id] ? "border-gray-500" : "border-blue-500"
             } rounded text-sm`}
           style={{ width: "100%" }}
         >
@@ -96,6 +95,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
             <EditIcon className={`text-${contentEditMode[question._id] === index ? "gray" : "blue"}-500`} />
           </div> */}
           <textarea
+            placeholder="Please enter an answer..."
             ref={textareaRef}
             className={`flex-1 outline-none border-none bg-transparent resize-none ${contentEditMode[question._id] === index ? " focus:border-gray-500" : ""
               }`}
@@ -117,27 +117,30 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
         </div>
       ))}
 
-      <button
-        onClick={() => {
+      {Object.values(contentEditMode).some((value) => value !== null) &&
+        <>
+          <button
+            onClick={() => {
 
-        }}
-        className="italic text-xs text-blue-400 font-bold inline-flex items-center mt-2"
-      >
-        <FontAwesomeIcon icon={faPlus} className="mr-1" />
-        <span>New Answer</span>
-      </button>
+            }}
+            className="italic text-xs text-blue-400 font-bold inline-flex items-center mt-2"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-1" />
+            <span>New Answer</span>
+          </button>
+          <div className="w-full flex justify-end">
+            <button onClick={handleUpdateClick} className="mr-2 hover:bg-green-400 hover:text-white text-sm text-green-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-green-500 inline-flex items-center">
+              {/* <DeleteIcon className="mr-2" /> */}
+              <span>Save Changes</span>
+            </button>
+            <button onClick={handleDeleteClick} className="hover:bg-red-400 hover:text-white text-sm text-red-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-red-500 inline-flex items-center">
+              <DeleteIcon className="mr-2" />
+              <span>Delete Question</span>
+            </button>
+          </div>
+        </>
+      }
 
-      <div className="w-full flex justify-end">
-        <button onClick={handleUpdateClick} className="mr-2 hover:bg-green-400 hover:text-white text-sm text-green-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-green-500 inline-flex items-center">
-          {/* <DeleteIcon className="mr-2" /> */}
-          <span>Save Changes</span>
-        </button>
-        <button onClick={handleDeleteClick} className="hover:bg-red-400 hover:text-white text-sm text-red-500 bg-white font-bold py-1 px-2 rounded border-solid border-2 border-red-500 inline-flex items-center">
-          <DeleteIcon className="mr-2" />
-          <span>Delete Question</span>
-        </button>
-
-      </div>
     </>
   );
 };
@@ -172,13 +175,17 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       // Toggle edit mode for the question title
       newEditMode.title = prevEditMode.title !== null ? null : 0;
 
+
+
       return newEditMode;
     });
+
+    console.log("MODE:", contentEditMode)
 
     // Set the currently focused question to null to reset the focus
     setFocusedQuestion(null);
   };
-  
+
   const handleEditTitleClick = (questionId: string) => {
     setFocusedQuestion(questionId); // Set the currently focused question
     // setEditTitleMode(true);
@@ -330,9 +337,10 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
         url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}`;
       }
 
+      console.log("LINK",url)
 
-      console.log("Ttile values:", titleValues[questionId])
-      console.log("Content values:", textareaValues[questionId] || [])
+      // console.log("Ttile values:", titleValues[questionId])
+      // console.log("Content values:", textareaValues[questionId] || [])
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -350,7 +358,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
         // Assuming the response includes the updated category data
         const updatedCategory = data.updatedCategory;
 
-        console.log("After Delete:", data);
+        console.log("After PUT:", data);
 
         // Update the state with the updated category data
         setQuestionsFromDb(updatedCategory.questions);
@@ -358,21 +366,21 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
 
         setNewQuestion(""); // reset the state after delete;
       } else {
-        console.error('Failed to delete the question:', response.statusText);
+        console.error('Failed to update the question:', response.statusText);
       }
     } catch (error) {
-      console.error('Error deleting the question:', error);
+      console.error('Error updating the question:', error);
     }
   };
 
   return (
     <div className="p-4">
-      <div className="flex">
-        <button onClick={handleNewQuestionClick} className="bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
+      <div className="flex align-center mb-5">
+        <button onClick={handleNewQuestionClick} className="mr-4 bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           <span>New Question</span>
         </button>
-        <button onClick={handleEditAllClick} className="italic text-xs text-blue-400 font-bold inline-flex items-center mb-2">
+        <button onClick={handleEditAllClick} className="italic text-xs text-blue-400 font-bold inline-flex items-center">
           <EditIcon />
           <span>Enable Edit</span>
         </button>
@@ -392,8 +400,9 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                           <EditIcon className={`text-gray-300 text-bold`} />
                         </div> */}
                         <textarea
+                          placeholder="Please enter the question..."
                           className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${contentEditMode[question._id] === 0 ? "border-green-500 border-1" : ""
-                        }`}
+                            }`}
                           value={titleValues[question._id] || ""}
                           readOnly={contentEditMode[question._id] === null}
                           onChange={(e) => {

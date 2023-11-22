@@ -48,6 +48,7 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
     const questionId = searchParams.get('questionId');
+    const lastedited = searchParams.get('lastedited');
     // const { title, contents } = req.body;
 
     let passedValue = await new Response(req.body).text();
@@ -58,7 +59,7 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
     // console.log("BODY IS",req.body)
 
     // Check if categoryId and questionId are provided
-    if (!categoryId || !questionId) {
+    if (!categoryId) {
       return Response.json({ error: 'Category ID and Question ID are required' });
     }
 
@@ -72,8 +73,17 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ error: 'Category not found' });
     }
 
-    // Find the index of the question in the category's questions array
-    const questionIndex = category.questions.findIndex((q: { _id: string | string[]; }) => q._id == questionId);
+    let questionIndex
+
+    if (lastedited) {
+
+      questionIndex = category.questions.findIndex((q: { lastedited: string; _id: string | string[]; }) => q.lastedited == lastedited);
+      
+      console.log("resp", questionIndex)
+    } else {
+      console.log("Cate....", questionId)
+      questionIndex = category.questions.findIndex((q: { _id: string | string[]; }) => q._id == questionId);
+    }
 
     // Check if the question is not found
     if (questionIndex === -1) {
@@ -115,19 +125,19 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ error: 'Category not found' });
     }
 
-    
+
     // Find the index of the question in the category's questions array
 
     let questionIndex
-    
+
     if (lastedited) {
-      
+
       questionIndex = category.questions.findIndex((q: {
         lastedited: string; _id: string | string[];
       }) => q.lastedited == lastedited);
 
       console.log("resp", questionIndex)
-    }else{
+    } else {
       console.log("Cate....", questionId)
       questionIndex = category.questions.findIndex((q: { _id: string | string[]; }) => q._id == questionId);
     }
