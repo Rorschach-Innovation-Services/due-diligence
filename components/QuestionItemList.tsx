@@ -24,6 +24,7 @@ interface QuestionItemProps {
   setContentEditMode: React.Dispatch<React.SetStateAction<{ [key: string]: number | null }>>;
   onDeleteQuestion: (questionId: string) => void;
   onUpdateQuestion: (questionId: string) => void;
+  onAddNewAnswer: (questionId: string) => void;
 }
 
 const QuestionItem: React.FC<QuestionItemProps> = ({
@@ -36,6 +37,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   setContentEditMode,
   onDeleteQuestion,
   onUpdateQuestion,
+  onAddNewAnswer,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -60,6 +62,11 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   const handleUpdateClick = async () => {
     // Call the passed function to handle the deletion
     onUpdateQuestion(question._id);
+  };
+
+  const handleNewAnswerClick = async () => {
+    // Call the passed function to handle the deletion
+    onAddNewAnswer(question._id);
   };
 
   const handleTextareaBlur = () => {
@@ -114,15 +121,16 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
             style={{ marginRight: "8px" }}
             onBlur={handleTextareaBlur}
           />
+          <div className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" >
+              <DeleteIcon className="text-gray-400 hover:text-red-400" />
+            </div>
         </div>
       ))}
 
       {Object.values(contentEditMode).some((value) => value !== null) &&
         <>
           <button
-            onClick={() => {
-
-            }}
+            onClick={handleNewAnswerClick}
             className="italic text-xs text-blue-400 font-bold inline-flex items-center mt-2"
           >
             <FontAwesomeIcon icon={faPlus} className="mr-1" />
@@ -162,6 +170,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   const [contentEditMode, setContentEditMode] = useState<{ [key: string]: number | null }>({});
   const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
   const [newQuestion, setNewQuestion] = useState("");
+
 
   const handleEditAllClick = () => {
     // Enable editing on all textareas, including the question title
@@ -230,6 +239,13 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
         return acc;
       }, {} as { [key: string]: string });
 
+      const storedExpandedQuestionIds = localStorage.getItem('expandedQuestionIds');
+      if (storedExpandedQuestionIds) {
+        setExpandedQuestionIds(JSON.parse(storedExpandedQuestionIds));
+      } else {
+        setExpandedQuestionIds([]);
+      }
+
       setTextareaValues(initialValues);
       setTitleValues(initialTitleValues);
     }
@@ -237,16 +253,14 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
 
   const handleQuestionClick = (questionId: string) => {
     setExpandedQuestionIds((prevIds) => {
-      if (prevIds.includes(questionId)) {
-        // If the clicked question is already expanded, collapse it
-        return [];
-      } else {
-        // If the clicked question is not expanded, collapse all others and expand it
-        return [questionId];
-      }
+      const newIds = prevIds.includes(questionId) ? [] : [questionId];
+      localStorage.setItem('expandedQuestionIds', JSON.stringify(newIds));
+      return newIds;
     });
-    setFocusedQuestion(null); // Reset focused question
+
+    setFocusedQuestion(questionId);
   };
+
 
   const handleToggleCollapseAll = () => {
     setCollapseAll(!collapseAll);
@@ -337,7 +351,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
         url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}`;
       }
 
-      console.log("LINK",url)
+      console.log("LINK", url)
 
       // console.log("Ttile values:", titleValues[questionId])
       // console.log("Content values:", textareaValues[questionId] || [])
@@ -370,6 +384,44 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       }
     } catch (error) {
       console.error('Error updating the question:', error);
+    }
+  };
+
+  const handleNewAnswer = async (questionId: string) => {
+    try {
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/answer?categoryId=${selectedCategory?._id}&questionId=${questionId}`;
+      if (newQuestion) {
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/answer?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}`;
+      }
+
+      console.log("LINK", url)
+
+      // console.log("Ttile values:", titleValues[questionId])
+      // console.log("Content values:", textareaValues[questionId] || [])
+      const response = await fetch(url, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        console.log("DATA: ====", data)
+
+        // Assuming the response includes the updated category data
+        const updatedCategory = data.updatedCategory;
+
+        console.log("After answer POST:", data);
+
+        // Update the state with the updated category data
+        setQuestionsFromDb(updatedCategory.questions);
+        setExpandedQuestionIds((prevIds) => prevIds.filter((id) => id !== questionId));
+
+        setNewQuestion(""); // reset the state after delete;
+      } else {
+        console.error('Failed to add new answer:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error Adding new answer', error);
     }
   };
 
@@ -447,6 +499,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                   setContentEditMode={setContentEditMode}
                   onDeleteQuestion={handleDeleteQuestion} // Pass the deletion handler
                   onUpdateQuestion={handleUpdateQuestion}
+                  onAddNewAnswer={handleNewAnswer}
                 />
               )}
             </div>
