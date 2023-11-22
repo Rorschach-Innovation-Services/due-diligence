@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUpFromGroundWater, faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
 import { EditIcon } from "@/icons/EditIcon";
 import { DeleteIcon } from "@/icons/Delete";
 import AddQuestionButton from "@/buttons/AddQuestionButton";
@@ -25,6 +25,7 @@ interface QuestionItemProps {
   onDeleteQuestion: (questionId: string) => void;
   onUpdateQuestion: (questionId: string) => void;
   onAddNewAnswer: (questionId: string) => void;
+  onDeleteContent: (questionId: string, contentIndex: number) => void;
 }
 
 const QuestionItem: React.FC<QuestionItemProps> = ({
@@ -38,6 +39,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   onDeleteQuestion,
   onUpdateQuestion,
   onAddNewAnswer,
+  onDeleteContent,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -57,6 +59,11 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   const handleDeleteClick = async () => {
     // Call the passed function to handle the deletion
     onDeleteQuestion(question._id);
+  };
+
+  const handleContentDeleteClick = async (contentIndex: number) => {
+    // Call the passed function to handle the deletion
+    onDeleteContent(question._id, contentIndex);
   };
 
   const handleUpdateClick = async () => {
@@ -121,9 +128,9 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
             style={{ marginRight: "8px" }}
             onBlur={handleTextareaBlur}
           />
-          <div className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" >
-              <DeleteIcon className="text-gray-400 hover:text-red-400" />
-            </div>
+          <div onClick={() => handleContentDeleteClick(index)} className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" >
+            <DeleteIcon className="text-gray-400 hover:text-red-400" />
+          </div>
         </div>
       ))}
 
@@ -425,6 +432,39 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     }
   };
 
+  const handleDeleteContent = async (questionId: string, contentIndex: number) => {
+    try {
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/answer?categoryId=${selectedCategory?._id}&questionId=${questionId}&contentIndex=${contentIndex}`;
+      if (newQuestion) {
+        url = `${process.env.NEXT_PUBLIC_API_URL}/api/answer?categoryId=${selectedCategory?._id}&lastedited=${newQuestion}&questionId=${questionId}&contentIndex=${contentIndex}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // console.log("Data:", data)
+
+        // Assuming the response includes the updated question data
+        const updatedQuestion = data.updatedCategory;
+
+        // console.log("After Content Delete:", updatedQuestion);
+
+        setQuestionsFromDb(updatedQuestion.questions);
+        setExpandedQuestionIds((prevIds) => prevIds.filter((id) => id !== questionId));
+
+        setNewQuestion(""); // reset the state after delete;
+      } else {
+        console.error('Failed to delete the question content:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error deleting the question content:', error);
+    }
+  };
+
+
   return (
     <div className="p-4">
       <div className="flex align-center mb-5">
@@ -500,6 +540,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                   onDeleteQuestion={handleDeleteQuestion} // Pass the deletion handler
                   onUpdateQuestion={handleUpdateQuestion}
                   onAddNewAnswer={handleNewAnswer}
+                  onDeleteContent={handleDeleteContent}
                 />
               )}
             </div>

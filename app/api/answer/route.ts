@@ -72,3 +72,64 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
       return [];
     }
   };
+
+export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { searchParams } = new URL(req.url as string);
+    const categoryId = searchParams.get('categoryId');
+    const questionId = searchParams.get('questionId');
+    const contentIndex = searchParams.get('contentIndex');
+    const lastedited = searchParams.get('lastedited');
+
+    // Ensure categoryId, questionId, and contentIndex are provided
+    if (!categoryId || contentIndex === null || contentIndex === undefined) {
+      return Response.json({ error: 'Category ID, Question ID, and Content Index are required' });
+    }
+
+    // Find the category by ID
+    const category = await CategoryModel.findOne({ _id: categoryId });
+
+    // Check if the category is not found
+    if (!category) {
+      return Response.json({ error: 'Category not found' });
+    }
+
+    // console.log(categoryId, questionId, contentIndex, lastedited)
+    // console.log(category)
+
+    // Find the question in the category's questions array
+    let question;
+
+    if (lastedited) {
+      question = category.questions.find((q: { lastedited: string; _id: string | string[] }) => q.lastedited === lastedited);
+    } else {
+      question = category.questions.find((q: { _id: string | string[] }) => q._id == questionId);
+    //   console.log("No lastedited!")
+    }
+
+    // console.log(question)
+    // Check if the question is not found
+    if (!question) {
+      return Response.json({ error: 'Question not found in the category' });
+    }
+
+    // Find the content item in the question's contents array
+    const contentItem = question.contents[contentIndex];
+
+    // Check if the content item is not found
+    if (contentItem === undefined) {
+      return Response.json({ error: 'Content item not found in the question' });
+    }
+
+    // Remove the content item from the question
+    question.contents.splice(contentIndex, 1);
+
+    // Save the updated category
+    const updatedCategory = await category.save();
+
+    return Response.json({ updatedCategory });
+  } catch (error) {
+    console.error('Error deleting question content:', error);
+    return Response.json({ error: 'Internal Server Error' });
+  }
+}
