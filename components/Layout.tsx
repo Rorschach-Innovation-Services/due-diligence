@@ -44,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
   return (
 
     <div className="flex bg-gray-900">
-      <aside ref={sidebarRef} className={`md:w-84 border-r border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside ref={sidebarRef} className={`md:w-2/6 border-r border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* profile */}
         <div className="p-4 flex justify-end">
           <button onClick={toggleAside} className="text-white">

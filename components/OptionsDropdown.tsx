@@ -2,19 +2,16 @@
 import { useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisH, faPencilAlt, faTrash, faShare } from "@fortawesome/free-solid-svg-icons";
+import { DeleteIcon } from "@/icons/Delete";
 
 interface OptionsDropdownProps {
   categoryId: string;
   isOpen: boolean;
-  onOptionClick: (option: string, categoryId: string) => void;
   onClose: () => void;
+  onRename: () => void;
 }
 
-const OptionsDropdown = ({ categoryId, isOpen, onOptionClick, onClose }: OptionsDropdownProps) => {
-  const handleOptionClick = (option: string) => {
-    onOptionClick(option, categoryId);
-    onClose(); // Close the options after clicking an option
-  };
+const OptionsDropdown = ({ categoryId, isOpen, onClose, onRename }: OptionsDropdownProps) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -42,28 +39,26 @@ const OptionsDropdown = ({ categoryId, isOpen, onOptionClick, onClose }: Options
   }
 
   return (
-    <div className="options-dropdown absolute top-0 right-0 mt-2 mr-2 z-30" onClick={(e) => e.stopPropagation()}>
-      <div className="flex flex-col bg-white border rounded shadow">
+    <div className="options-dropdown absolute top-0 right-0 mt-2 mr-2 z-30 divide-gray-100 rounded-lg shadow w-44 bg-gray-700" onClick={(e) => e.stopPropagation()}>
+      <div className="flex flex-col bg-gray-800 border rounded shadow">
         <div
-          className="hover:bg-gray-200 p-2 rounded cursor-pointer"
-          onClick={() => handleOptionClick("Share")}
+          className="flex block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+          onClick={() => {
+            onRename(); // Trigger renaming
+            onClose();
+          }}
         >
-          <FontAwesomeIcon icon={faShare} className="text-gray-500 mr-2" />
-          Share
+          <FontAwesomeIcon icon={faPencilAlt} className="text-md text-white mr-2" />
+          <p className="text-md">Rename</p>
         </div>
         <div
-          className="hover:bg-gray-200 p-2 rounded cursor-pointer"
-          onClick={() => handleOptionClick("Rename")}
+          className="flex block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+          onClick={() => {
+            onClose();
+          }}
         >
-          <FontAwesomeIcon icon={faPencilAlt} className="text-gray-500 mr-2" />
-          Rename
-        </div>
-        <div
-          className="hover:bg-gray-200 p-2 rounded cursor-pointer"
-          onClick={() => handleOptionClick("Edit")}
-        >
-          <FontAwesomeIcon icon={faEllipsisH} className="text-gray-500 mr-2" />
-          Edit
+          <DeleteIcon className="text-md text-red-500 mr-2"/>
+          <p className="text-md text-red-500">Delete questions</p>
         </div>
       </div>
     </div>

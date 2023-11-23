@@ -3,22 +3,7 @@ import CategoryModel from '@/models/category';
 import connectToDatabase from '@/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-
 connectToDatabase();
-// Endpoint for fetching all categories: /api/categories
-// export async function GET(req: NextApiRequest, res: NextApiResponse) {
-//   try {
-//     // Fetch all categories from the database
-//     const categories = await CategoryModel.find({}, {id: 1, name: 1, _id: 0});
-
-//     // Return the list of categories
-//     return Response.json({ categories });
-//   } catch (error) {
-//     // Handle errors
-//     console.error('Error fetching categories:', error);
-//     return Response.json({ error: 'Internal Server Error' });
-//   }
-// }
 
 export async function GET(req: NextApiRequest, res: NextApiResponse) {
   try {

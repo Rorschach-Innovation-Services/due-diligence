@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import SearchBar from './SearchBar'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faPerson, faUser, faUserCircle } from '@fortawesome/free-solid-svg-icons';
 
 interface NavbarProps {
   onToggleAside: () => void;
@@ -18,7 +18,7 @@ export default function Navbar({ onToggleAside }: NavbarProps) {
 
       <div className="space-x-6 flex  align-center">
         <Link href="/about">
-          About
+          <FontAwesomeIcon icon={faUserCircle}/>
         </Link>
       </div>
     </nav>
