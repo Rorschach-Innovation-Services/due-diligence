@@ -36,7 +36,7 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ category });
     } else {
       // Fetch all categories from the database
-      const categories = await CategoryModel.find({}, { id: 1, name: 1, _id: 1 });
+      const categories = await CategoryModel.find({}, { id: 1, name: 1, group: 1, _id: 1 });
       return Response.json({ categories });
     }
   } catch (error) {
@@ -54,8 +54,8 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     let valueToJson = JSON.parse(passedValue);
     console.log('Received request body:', valueToJson);
 
-    const { id, name, questions } = valueToJson;
-    const dataToInsert = { id, name, questions };
+    const { id, name, questions, group } = valueToJson;
+    const dataToInsert = { id, name, questions, group };
 
     // Create a new category in the database
     const result = await CategoryModel.create(dataToInsert);

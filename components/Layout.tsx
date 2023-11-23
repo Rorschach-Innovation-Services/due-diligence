@@ -1,9 +1,11 @@
 // components/Layout.tsx
 'use client';
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar";
 import QuestionCategoryList from "./QuestionCategoryList";
 import QuestionItemList from "./QuestionItemList";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars, faCancel, faClose, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 interface LayoutProps {
   children?: ReactNode;
@@ -11,24 +13,52 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
+  const [asideOpen, setAsideOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const handleCategoryChange = (category: any) => {
     setSelectedCategory(category);
   };
 
+  const toggleAside = () => {
+    setAsideOpen(!asideOpen);
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      // Close the sidebar if the click is outside of it
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setAsideOpen(false);
+      }
+    };
+
+    // Attach the event listener to the whole document
+    document.addEventListener('mousedown', handleOutsideClick);
+
+    return () => {
+      // Remove the event listener when the component unmounts
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, []);
+
   return (
+
     <div className="flex bg-gray-900">
-      {/* Sidebar */}
-      <aside className="hidden md:block md:w-64 bg-white border-r border-gray-300">
+      <aside ref={sidebarRef} className={`md:w-84 border-r border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* profile */}
+        <div className="p-4 flex justify-end">
+          <button onClick={toggleAside} className="text-white">
+            <FontAwesomeIcon icon={asideOpen ? faTimes : faBars} />
+          </button>
+        </div>
         <QuestionCategoryList onCategoryChange={handleCategoryChange} />
-        {/* links */}
+        
       </aside>
 
-      <div className="flex flex-col flex-1">
-        <Navbar />
+      <div className="flex flex-col flex-1 ">
+        <Navbar onToggleAside={toggleAside} />
 
-        <main className="p-6 flex-1 bg-gray-100 overflow-y-auto">
+        <main className="p-6 flex-2 bg-gray-100 overflow-y-auto min-h-screen">
           {/* Page content */}
           {selectedCategory ? <QuestionItemList selectedCategory={selectedCategory} /> :
             <div>

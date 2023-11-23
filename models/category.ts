@@ -10,6 +10,7 @@ interface Question {
 interface Category extends Document {
   id?: string; 
   name?: string;
+  group: string;
   questions?: Question[];
 }
 
@@ -23,6 +24,7 @@ const questionSchema = new Schema<Question>({
 const categorySchema = new Schema<Category>({
     id: { type: String, required: false },
     name: { type: String, default: '', required: false },
+    group: { type: String, default: '', required: false },
     questions: { type: [questionSchema], default: [], required: false },
 });
 

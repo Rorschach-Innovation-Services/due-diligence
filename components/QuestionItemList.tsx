@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUpFromGroundWater, faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUpFromGroundWater, faEdit, faEye, faEyeSlash, faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
 import { EditIcon } from "@/icons/EditIcon";
 import { DeleteIcon } from "@/icons/Delete";
 import AddQuestionButton from "@/buttons/AddQuestionButton";
@@ -8,6 +8,11 @@ import AddAnswerButton from "@/buttons/AddAnswerButton";
 import $ from 'jquery';
 // import QuestionItem from "./QuestionItem";
 
+
+
+
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 interface Question {
   _id: string;
   title: string;
@@ -41,7 +46,33 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   onAddNewAnswer,
   onDeleteContent,
 }) => {
+
+  const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [editorValue, setEditorValue] = useState('');
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      ['link', 'image'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      // ['blockquote', 'code-block'],
+      [{ 'script': 'sub'}, { 'script': 'super' }],
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'link', 'image',
+    'list', 'bullet',
+    // 'blockquote', 'code-block',
+    'script', 'sub', 'script', 'super'
+  ];
+
+
 
   const handleUniversalEditClick = () => {
     // Toggle edit mode for title and all content items in the current question
@@ -101,20 +132,59 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
       {question.contents.map((content, index) => (
         <div
           key={index}
-          className={`flex items-start justify-start mt-2 relative p-4 ${Object.values(contentEditMode).some((value) => value !== null) ? "bg-gray-100" : "bg-blue-50"} border ${contentEditMode[question._id] ? "border-gray-500" : "border-blue-500"
+          className={`mb-3 flex items-start justify-start mt-2 relative p-0 ${Object.values(contentEditMode).some((value) => value !== null) ? "bg-gray-100" : "bg-blue-50"} border ${contentEditMode[question._id] ? "border-gray-500" : "border-blue-500"
             } rounded text-sm`}
           style={{ width: "100%" }}
         >
           {/* <div className="mr-2 cursor-pointer">
             <EditIcon className={`text-${contentEditMode[question._id] === index ? "gray" : "blue"}-500`} />
           </div> */}
+          {/* <ReactQuill
+            modules={module}
+            theme="snow"
+            value={(textareaValues[question._id] || [])[index] || ""}
+            onChange={(newContent) => {
+              const newTextareaValues = { ...textareaValues };
+              newTextareaValues[question._id] = newTextareaValues[question._id] || [];
+
+              const currentTextareaValues = newTextareaValues[question._id];
+              if (currentTextareaValues) {
+                currentTextareaValues[index] = newContent;
+                setTextareaValues(newTextareaValues);
+              }
+            }}
+            style={{ height: '100%', width: "100%" }}
+          /> */}
+          {/* <div style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '10px', marginBottom: '16px' }}>
+            
+          </div> */}
+          <ReactQuill
+              theme="snow"
+              value={(textareaValues[question._id] || [])[index] || ""}
+              onChange={(newContent) => {
+                const newTextareaValues = { ...textareaValues };
+                newTextareaValues[question._id] = newTextareaValues[question._id] || [];
+
+                const currentTextareaValues = newTextareaValues[question._id];
+                if (currentTextareaValues) {
+                  currentTextareaValues[index] = newContent;
+                  setTextareaValues(newTextareaValues);
+                }
+              }}
+              modules={modules}
+              formats={formats}
+              placeholder="Add answer..."
+              style={{ height: '100%', width: "100%", fontSize: '14px',}}
+            />
+
+          {/* <ReactQuill theme="snow" value={value} onChange={setValue} />;
           <textarea
             placeholder="Please enter an answer..."
             ref={textareaRef}
             className={`flex-1 outline-none border-none bg-transparent resize-none ${contentEditMode[question._id] === index ? " focus:border-gray-500" : ""
               }`}
             value={(textareaValues[question._id] || [])[index] || ""}
-            readOnly={contentEditMode[question._id] === null}
+            readOnly={Object.values(contentEditMode).some((value) => value === null)}
             onChange={(e) => {
               const newTextareaValues = { ...textareaValues };
               newTextareaValues[question._id] = newTextareaValues[question._id] || [];
@@ -127,7 +197,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
             rows={expandedQuestionIds.includes(question._id) ? 3 : 1}
             style={{ marginRight: "8px" }}
             onBlur={handleTextareaBlur}
-          />
+          /> */}
           <div onClick={() => handleContentDeleteClick(index)} className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer" >
             <DeleteIcon className="text-gray-400 hover:text-red-400" />
           </div>
@@ -177,6 +247,13 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   const [contentEditMode, setContentEditMode] = useState<{ [key: string]: number | null }>({});
   const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
   const [newQuestion, setNewQuestion] = useState("");
+  const [editMode, setEditMode] = useState(false);
+
+
+  // const handleToggle = () => {
+  //   setEditMode(!editMode);
+  //   // onToggle(!editMode);
+  // };
 
 
   const handleEditAllClick = () => {
@@ -195,7 +272,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
 
       return newEditMode;
     });
-
+    setEditMode(!editMode);
     console.log("MODE:", contentEditMode)
 
     // Set the currently focused question to null to reset the focus
@@ -466,16 +543,25 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
 
 
   return (
-    <div className="p-4">
-      <div className="flex align-center mb-5">
+    <div className="p-4 pt-0">
+      <div className="flex">
+        <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
+          {selectedCategory ? `${selectedCategory.name}` : "Category"}
+        </h2>
+      </div>
+      <div className="flex justify-between align-center mb-5">
         <button onClick={handleNewQuestionClick} className="mr-4 bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           <span>New Question</span>
         </button>
-        <button onClick={handleEditAllClick} className="italic text-xs text-blue-400 font-bold inline-flex items-center">
+        <button onClick={handleEditAllClick} className={`italic text-sm text-${editMode ? "blue" : "red"}-400 font-bold inline-flex items-center`}>
+          <FontAwesomeIcon className="mr-1" icon={editMode ? faEye : faEyeSlash} />
+          <span>{editMode ? "Enable Edit" : "Disable Edit"}</span>
+        </button>
+        {/* <button onClick={handleEditAllClick} className="italic text-xs text-blue-400 font-bold inline-flex items-center">
           <EditIcon />
           <span>Enable Edit</span>
-        </button>
+        </button> */}
       </div>
 
       <div className="space-y-4 relative">
@@ -493,10 +579,10 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                         </div> */}
                         <textarea
                           placeholder="Please enter the question..."
-                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${contentEditMode[question._id] === 0 ? "border-green-500 border-1" : ""
+                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editMode? "border-green-500 border-1" : ""
                             }`}
                           value={titleValues[question._id] || ""}
-                          readOnly={contentEditMode[question._id] === null}
+                          readOnly={editMode}
                           onChange={(e) => {
                             setTitleValues((prevValues) => ({
                               ...prevValues,
