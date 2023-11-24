@@ -9,9 +9,10 @@ interface OptionsDropdownProps {
   isOpen: boolean;
   onClose: () => void;
   onRename: () => void;
+  onDelete: () => void;
 }
 
-const OptionsDropdown = ({ categoryId, isOpen, onClose, onRename }: OptionsDropdownProps) => {
+const OptionsDropdown = ({ categoryId, isOpen, onClose, onRename, onDelete }: OptionsDropdownProps) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -55,6 +56,7 @@ const OptionsDropdown = ({ categoryId, isOpen, onClose, onRename }: OptionsDropd
           className="flex block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
           onClick={() => {
             onClose();
+            onDelete();
           }}
         >
           <DeleteIcon className="text-md text-red-500 mr-2"/>

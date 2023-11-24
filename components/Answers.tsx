@@ -1,3 +1,7 @@
+'use client';
+
+import { useUser } from '@auth0/nextjs-auth0/client';
+
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpFromGroundWater, faEdit, faEye, faEyeSlash, faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
@@ -41,6 +45,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
 
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { user, error, isLoading } = useUser();
 
   const modules = {
     toolbar: [
@@ -127,9 +132,13 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
                 placeholder="Add answer..."
                 style={{ height: '100%', width: "100%", fontSize: '14px' }}
               />
-              <div onClick={() => handleContentDeleteClick(index)} className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer">
+              {user &&(
+                <div onClick={() => handleContentDeleteClick(index)} className="absolute top-0 right-0 mr-1 mt-1 cursor-pointer">
                 <DeleteIcon className="text-gray-400 hover:text-red-400" />
               </div>
+              )
+
+              }
             </>
           ) : (
             <>

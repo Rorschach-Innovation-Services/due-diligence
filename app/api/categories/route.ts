@@ -53,3 +53,71 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     return Response.json({ error: 'Internal Server Error' });
   }
 }
+export async function PUT(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { searchParams } = new URL(req.url as string);
+    const categoryId = searchParams.get('categoryId');
+    
+    let passedValue = await new Response(req.body).text();
+    let valueToJson = JSON.parse(passedValue);
+    const { name } = valueToJson
+
+
+    // Check if categoryId and questionId are provided
+    if (!categoryId) {
+      return Response.json({ error: 'Category ID and Question ID are required' });
+    }
+
+    // Find the category by ID
+    const category = await CategoryModel.findOne({ _id: categoryId });
+    category.name = name
+
+    // Check if the category is not found
+    if (!category) {
+      return Response.json({ error: 'Category not found' });
+    }
+
+  
+    // Save the updated category
+    const updatedCategory = await category.save();
+
+    return Response.json({ updatedCategory });
+  } catch (error) {
+    console.error('Error updating question:', error);
+    return Response.json({ error: 'Internal Server Error' });
+  }
+}
+
+export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const { searchParams } = new URL(req.url as string);
+    const categoryId = searchParams.get('categoryId');
+    
+    // Check if categoryId and questionId are provided
+    if (!categoryId) {
+      return Response.json({ error: 'Category ID and Question ID are required' });
+    }
+
+    // Find the category by ID
+    const category = await CategoryModel.findOne({ _id: categoryId });
+
+    // Delete the category
+    await category.deleteOne();
+
+    // Check if the category is not found
+    if (!category) {
+      return Response.json({ error: 'Category not found' });
+    }
+
+    
+  
+    // Save the updated category
+    const updatedCategory = await category.save();
+
+    return Response.json({ updatedCategory });
+  } catch (error) {
+    console.error('Error updating question:', error);
+    return Response.json({ error: 'Internal Server Error' });
+  }
+}
+

@@ -2,10 +2,12 @@
 'use client';
 import { ReactNode, useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar";
-import QuestionCategoryList from "./QuestionCategoryList";
-import QuestionItemList from "./QuestionItemList";
+import QuestionCategoryList from "./SideBar";
+import QuestionItemList from "./Questions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faCancel, faClose, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faCancel, faClose, faPlus, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { useUser } from '@auth0/nextjs-auth0/client';
+
 
 interface LayoutProps {
   children?: ReactNode;
@@ -15,6 +17,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
   const [asideOpen, setAsideOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
 
   const handleCategoryChange = (category: any) => {
     setSelectedCategory(category);
@@ -45,14 +48,13 @@ const Layout = ({ children }: LayoutProps) => {
 
     <div className="flex bg-gray-900">
       <aside ref={sidebarRef} className={`md:w-2/6 border-r border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* profile */}
         <div className="p-4 flex justify-end">
           <button onClick={toggleAside} className="text-white">
             <FontAwesomeIcon icon={asideOpen ? faTimes : faBars} />
           </button>
         </div>
         <QuestionCategoryList onCategoryChange={handleCategoryChange} />
-        
+
       </aside>
 
       <div className="flex flex-col flex-1 ">

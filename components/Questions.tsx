@@ -1,9 +1,13 @@
+'use client';
+
+import { useUser } from '@auth0/nextjs-auth0/client';
+
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash, faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
 import 'react-quill/dist/quill.snow.css';
 import { appEditMode } from "@/lib/storage";
-import QuestionItem from "./QuestionItem";
+import QuestionItem from "./Answers";
 import { EditIcon } from "@/icons/EditIcon";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
@@ -44,6 +48,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [editMode, setEditMode] = useState(false);
+  const { user, error, isLoading } = useUser();
 
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -324,26 +329,31 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     }
   };
 
-  console.log("MODE E:", appEditMode());
+  // console.log("MODE E:", appEditMode());
   return (
     <div className="relative p-4 pt-0">
-      <button onClick={handleEditAllClick} className={`mb-4 italic text-sm text-${appEditMode() ? "red" : "blue"}-400 font-bold inline-flex items-center`}>
-        <FontAwesomeIcon className="mr-1" icon={appEditMode() ? faEyeSlash : faEye} />
-        <span>{appEditMode() ? "Disable Edit" : "Enable Edit"}</span>
-      </button>
+      {user && (
+        <>
+          <button onClick={handleEditAllClick} className={`mb-4 italic text-sm text-${appEditMode() ? "red" : "blue"}-400 font-bold inline-flex items-center`}>
+            <FontAwesomeIcon className="mr-1" icon={appEditMode() ? faEyeSlash : faEye} />
+            <span>{appEditMode() ? "Disable Edit" : "Enable Edit"}</span>
+          </button>
+
+
+          <div className="flex justify-end align-center mt-5 mb-5">
+            <button onClick={handleNewQuestionClick} className=" bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
+              <FontAwesomeIcon icon={faPlus} className="mr-2" />
+              <span>New Question</span>
+            </button>
+          </div>
+        </>
+      )
+      }
       <div className="flex">
         <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
-            {selectedCategory ? `${selectedCategory.name}` : "Category"}
-          </h2>
+          {selectedCategory ? `${selectedCategory.name}` : "Category"}
+        </h2>
       </div>
-
-      <div className="flex justify-end align-center mt-5 mb-5">
-        <button onClick={handleNewQuestionClick} className=" bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
-          <FontAwesomeIcon icon={faPlus} className="mr-2" />
-          <span>New Question</span>
-        </button>
-      </div>
-
       <div className="space-y-4 relative">
         {questionsFromDb.slice()
           .sort((a, b) => b._id.localeCompare(a._id))
@@ -354,7 +364,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                   {expandedQuestionIds.includes(question._id) ? (
                     <div className="mr-2 flex w-full cursor-pointer">
                       <div className="flex w-full items-start">
-                        <textarea
+                        {appEditMode() ? (<textarea
                           placeholder="Please enter the question..."
                           className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${appEditMode() ? "border-green-500 border-1" : ""
                             }`}
@@ -369,11 +379,12 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
                           rows={3}
                           style={{ marginRight: "8px" }}
                         // onBlur={handleTitleInputBlur}
-                        />
+                        />)
+                          : (<p onClick={() => handleQuestionClick(question._id)} className="mb-2 cursor-pointer w-full text-sm">{question.title}</p>)}
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm">{question.title}</p>
+                    <p onClick={() => handleQuestionClick(question._id)} className="cursor-pointer w-full text-sm">{question.title}</p>
                   )}
                 </div>
                 {expandedQuestionIds.includes(question._id) ? (
