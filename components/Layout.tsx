@@ -15,12 +15,17 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [asideOpen, setAsideOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
 
   const handleCategoryChange = (category: any) => {
     setSelectedCategory(category);
+  };    
+
+  const handleCategoryNameChange = (categoryName: any) => {
+    setSelectedCategoryName(categoryName);
   };
 
   const toggleAside = () => {
@@ -49,6 +54,8 @@ const Layout = ({ children }: LayoutProps) => {
     };
   }, []);
 
+  console.log("CATEGORY NAME IN LAYOUT =", selectedCategoryName)
+
   return (
 
     <div className="flex bg-gray-900">
@@ -62,14 +69,14 @@ const Layout = ({ children }: LayoutProps) => {
 
         <button
           // onClick={handleNewAnswerClick}
-          className="italic ml-4 text-xs text-blue-400 font-bold inline-flex items-center mt-2"
+          className="italic  ml-4 text-xs text-blue-400 font-bold inline-flex items-center mt-2"
         >
           <FontAwesomeIcon icon={faPlus} className="mr-1" />
           <span>Add Group</span>
         </button> 
 
 
-        <QuestionCategoryList onCategoryChange={handleCategoryChange} />
+        <QuestionCategoryList onCategoryNameChange={handleCategoryNameChange} onCategoryChange={handleCategoryChange} />
 
       </aside>
 
@@ -77,7 +84,7 @@ const Layout = ({ children }: LayoutProps) => {
         <Navbar onToggleAside={toggleAside} onHomeClick={showHomeContent} />
 
         <main className="p-6 flex-2 bg-gray-100 overflow-y-auto min-h-screen">
-          {selectedCategory ? <QuestionItemList selectedCategory={selectedCategory} /> :
+          {selectedCategory ? <QuestionItemList selectedCategoryName={selectedCategoryName} selectedCategory={selectedCategory} /> :
             <div>
 
               <br />

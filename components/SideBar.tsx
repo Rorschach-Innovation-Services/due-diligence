@@ -23,9 +23,10 @@ interface Category {
 
 interface QuestionCategoryListProps {
   onCategoryChange: (selectedCategory: any) => void;
+  onCategoryNameChange: (selectedCategoryName: any) => void;
 }
 
-export default function QuestionCategoryList({ onCategoryChange }: QuestionCategoryListProps) {
+export default function QuestionCategoryList({ onCategoryChange, onCategoryNameChange }: QuestionCategoryListProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<{ [group: string]: boolean }>({});
@@ -36,19 +37,82 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
   const { user, error, isLoading } = useUser();
   const [loading, setLoading] = useState(true);
   const [groupedCategories, setGroupedCategories] = useState<{ [group: string]: Category[] }>({});
+  const [categoryEditName, setCategoryEditName] = useState<string | null>(null);
+  const [categoryInEdit, setCategoryInEdit] = useState<Category | null>(null);
+
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleRename = (categoryId: string) => {
-    setRenameCategoryId(categoryId);
+    const categoryToEdit = categories.find((cat) => cat._id === categoryId);
+    if (categoryToEdit) {
+      setCategoryInEdit(categoryToEdit);
+      setRenameCategoryId(categoryId);
+    }
   };
 
   const handleRenameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedCategories = categories.map((cat) =>
-      cat._id === renameCategoryId ? { ...cat, name: event.target.value } : cat
-    );
-    setCategories(updatedCategories);
+    // Update the input value directly, not the state
+    setCategoryInEdit((prevCategory: Category | null) => ({
+      ...prevCategory!,
+      name: event.target.value,
+      _id: prevCategory?._id || '', // Ensure _id is a string
+    }));
+
   };
+
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+      setCategories(data.categories || []);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setLoading(false);
+    }
+  };
+
+  const handleFinishRename = async () => {
+    // Save updated name to the database
+    if (categoryInEdit && categoryInEdit.name) {
+      try {
+        const categoryId = categoryInEdit._id;
+
+        // Save the updated category to the database
+        await handleUpdateCategory(categoryId, categoryInEdit.name); // Pass the updated name
+
+        // Update the category in the state
+        setCategories((prevCategories) =>
+          prevCategories.map((cat) => (cat._id === categoryId ? categoryInEdit : cat))
+        );
+
+        console.log("Cat EDIT:", categoryInEdit.name)
+        onCategoryNameChange(categoryInEdit.name)
+        // if (categoryInEdit.name) {
+        localStorage.setItem("selectedCategoryName", categoryInEdit.name);
+        // }
+
+        console.log("selectedCategory===", categoryInEdit.name, "===" ,localStorage.getItem("selectedCategoryName"))
+
+
+        setRenameCategoryId(null);
+      } catch (error) {
+        console.error('Error finishing rename:', error);
+      } finally {
+        setCategoryInEdit(null);
+        loadGroupedCategories(); // Fetch data after the update is completed
+      }
+    }
+  };
+
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+
 
   const handleRenameBlur = () => {
     setRenameCategoryId(null);
@@ -66,7 +130,10 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
     setSelectedCategoryId(categoryId);
     setMoreOptionsCategoryId(null);
     const selectedCategory = categories.find((cat) => cat._id === categoryId);
+
     onCategoryChange(selectedCategory);
+    // selectedCategory.name = localStorage.getItem("selectedCategoryName")
+
   };
 
   const groupCategories = async (categories: Category[]) => {
@@ -98,31 +165,17 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
     return groupedCategories;
   };
 
+  const loadGroupedCategories = async () => {
+    setLoading(true);
+    const categoriesData = await fetch("/api/categories");
+    const data = await categoriesData.json();
+    console.log("Category data INIT:", data.categories)
+    const grouped = await groupCategories(data.categories);
+    setGroupedCategories(grouped);
+    setLoading(false);
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/categories");
-        const data = await response.json();
-        setCategories(data.categories || []);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        setLoading(false);
-      }
-    };
 
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const loadGroupedCategories = async () => {
-      setLoading(true);
-      const categoriesData = await fetch("/api/categories");
-      const data = await categoriesData.json();
-      const grouped = await groupCategories(data.categories);
-      setGroupedCategories(grouped);
-      setLoading(false);
-    };
 
     loadGroupedCategories();
   }, []);
@@ -144,15 +197,15 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
     setOptionsDropdownOpen(null);
   };
 
-  const handleRenameKeyPress = async (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      await handleUpdateCategory(renameCategoryId!);
-      setRenameCategoryId(null);
-      setIsEditing(null); // Clear editing state after updating
-    }
-  };
+  // const handleRenameKeyPress = async (event: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (event.key === 'Enter') {
+  //     await handleUpdateCategory(renameCategoryId!);
+  //     setRenameCategoryId(null);
+  //     setIsEditing(null); // Clear editing state after updating
+  //   }
+  // };
 
-  const handleUpdateCategory = async (categoryId: string) => {
+  const handleUpdateCategory = async (categoryId: string, newName: string) => {
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/api/categories?categoryId=${categoryId}`;
 
@@ -162,19 +215,15 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: categories.find((cat) => cat._id === categoryId)?.name, // Get the updated category name from state
+          name: newName,
         }),
       });
 
-      console.log("CHECK:", categories.find((cat) => cat._id === categoryId))
-      console.log(response)
       if (response.ok) {
         const data = await response.json();
 
         // Assuming the response includes the updated category data
         const updatedCategory = data.updatedCategory;
-
-        console.log("After PUT:", data);
 
         // Update the state with the updated category data
         setCategories((prevCategories) =>
@@ -228,7 +277,7 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
                 className="flex items-center justify-between cursor-pointer"
                 onClick={() => toggleGroup(groupName)}
               >
-                <div className="text-xs opacity-25 text-gray-100 font-bold py-2">{groupName.toUpperCase()}</div>
+                <div className="text-xs opacity-50 text-blue-400 font-bold py-2">{groupName.toUpperCase()}</div>
                 <FontAwesomeIcon className="ml-2 text-sm opacity-25 text-gray-100 font-bold" icon={expandedGroups[groupName] ? faChevronUp : faChevronDown} />
               </div>
 
@@ -238,22 +287,22 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
                 <div className="ml-4">
                   <button
                     // onClick={handleNewAnswerClick}
-                    className="italic text-xs text-green-400 font-bold inline-flex items-center mt-2"
+                    className="italic text-xs opacity-50 text-green-400 font-bold inline-flex items-center mt-2"
                   >
                     <FontAwesomeIcon icon={faPlus} className="mr-1" />
                     <span>Add Category</span>
                   </button>
                   {groupCategories.map((cat: Category) => (
                     <div key={cat._id} className="relative">
-                      {renameCategoryId === cat._id ? ( // Render input field if in rename mode
+                      {renameCategoryId === cat._id ? (
                         <input
                           className="w-full mb-2"
                           type="text"
                           ref={inputRef}
-                          value={cat.name}
-                          onChange={handleRenameChange}
+                          value={categoryInEdit?.name || ''}
+                          onChange={(e) => handleRenameChange(e)}
                           onBlur={handleRenameBlur}
-                          onKeyPress={handleRenameKeyPress}
+                          onKeyPress={(e) => e.key === 'Enter' && handleFinishRename()} // Handle Enter key press
                           autoFocus
                         />
                       ) : (
@@ -282,6 +331,7 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
                       )}
                     </div>
                   ))}
+
                 </div>
               )}
             </div>
@@ -291,3 +341,7 @@ export default function QuestionCategoryList({ onCategoryChange }: QuestionCateg
     </div>
   );
 }
+function loadCategoriesData() {
+  throw new Error('Function not implemented.');
+}
+

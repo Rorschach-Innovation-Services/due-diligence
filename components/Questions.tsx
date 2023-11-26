@@ -20,17 +20,19 @@ interface Question {
 }
 
 interface QuestionItemProps {
-  question: Question;
-  expandedQuestionIds: string[];
-  textareaValues: { [key: string]: string[] | undefined };
-  setExpandedQuestionIds: React.Dispatch<React.SetStateAction<string[]>>;
-  setTextareaValues: React.Dispatch<React.SetStateAction<{ [key: string]: string[] | undefined }>>;
-  contentEditMode: { [key: string]: number | null };
-  setContentEditMode: React.Dispatch<React.SetStateAction<{ [key: string]: number | null }>>;
-  onDeleteQuestion: (questionId: string) => void;
-  onUpdateQuestion: (questionId: string) => void;
-  onAddNewAnswer: (questionId: string) => void;
-  onDeleteContent: (questionId: string, contentIndex: number) => void;
+  // question: Question;
+  // expandedQuestionIds: string[];
+  // textareaValues: { [key: string]: string[] | undefined };
+  // setExpandedQuestionIds: React.Dispatch<React.SetStateAction<string[]>>;
+  // setTextareaValues: React.Dispatch<React.SetStateAction<{ [key: string]: string[] | undefined }>>;
+  // contentEditMode: { [key: string]: number | null };
+  // setContentEditMode: React.Dispatch<React.SetStateAction<{ [key: string]: number | null }>>;
+  // onDeleteQuestion: (questionId: string) => void;
+  // onUpdateQuestion: (questionId: string) => void;
+  // onAddNewAnswer: (questionId: string) => void;
+  // onDeleteContent: (questionId: string, contentIndex: number) => void;
+  selectedCategory: Category | null;
+  selectedCategoryName: string | null
 }
 
 interface Category {
@@ -39,7 +41,7 @@ interface Category {
   questions: Array<Question>;
 }
 
-function QuestionItemList({ selectedCategory }: { selectedCategory: Category | null }) {
+function QuestionItemList({ selectedCategory, selectedCategoryName }: QuestionItemProps) {
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<string[]>([]);
   const [textareaValues, setTextareaValues] = useState<{ [key: string]: string[] | undefined }>({});
   const [titleValues, setTitleValues] = useState<{ [key: string]: string }>({});
@@ -49,9 +51,21 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
   const [newQuestion, setNewQuestion] = useState("");
   const [editMode, setEditMode] = useState(false);
   const { user, error, isLoading } = useUser();
+  
+  
+  
+  const [localStorageCategoryName, setLocalStorageCategoryName] = useState<string | null>(
+    localStorage.getItem("selectedCategoryName")
+  );
 
   const [value, setValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+
+  if (selectedCategory && selectedCategoryName ) {
+    localStorage.setItem("selectedCategoryName", selectedCategoryName)
+    // setLocalStorageCategoryName(selectedCategoryName)
+  }
 
   const modules = {
     toolbar: [
@@ -147,6 +161,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       setTitleValues(initialTitleValues);
     }
   }, [questionsFromDb]);
+  
 
   const handleQuestionClick = (questionId: string) => {
     setExpandedQuestionIds((prevIds) => {
@@ -162,7 +177,12 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+
+      console.log("RESponse:", response)
 
       if (response.ok) {
         const data = await response.json();
@@ -329,7 +349,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
     }
   };
 
-  // console.log("MODE E:", appEditMode());
+  console.log("selectedCategoryName in QUestion:", selectedCategoryName);
   return (
     <div className="relative p-4 pt-0">
       {user && (
@@ -351,7 +371,7 @@ function QuestionItemList({ selectedCategory }: { selectedCategory: Category | n
       }
       <div className="flex">
         <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
-          {selectedCategory ? `${selectedCategory.name}` : "Category"}
+          {selectedCategory ? `${localStorage.getItem("selectedCategoryName")}` : "Category"}
         </h2>
       </div>
       <div className="space-y-4 relative">

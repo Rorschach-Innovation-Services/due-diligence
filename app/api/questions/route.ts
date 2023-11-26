@@ -94,7 +94,10 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
     category.questions[questionIndex].title = title;
     category.questions[questionIndex].contents = contents;
 
-    // Save the updated category
+    if(!category.group) {
+      category.group = null;
+    }
+    
     const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
@@ -150,7 +153,10 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
     // Remove the question from the category
     category.questions.splice(questionIndex, 1);
 
-    // Save the updated category
+    if(!category.group) {
+      category.group = null;
+    }
+    
     const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
@@ -176,6 +182,8 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     // Find the category by ID
     const category = await CategoryModel.findOne({ _id: categoryId });
 
+    console.log("Category is", category)
+
     // Check if the category is not found
     if (!category) {
       return Response.json({ error: 'Category not found' });
@@ -193,7 +201,10 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     // Add the new question to the category
     category.questions.push(newQuestion);
 
-    // Save the updated category
+    if(!category.group) {
+      category.group = null;
+    }
+    
     const updatedCategory = await category.save();
 
     const questions = await fetchQuestions(categoryId);

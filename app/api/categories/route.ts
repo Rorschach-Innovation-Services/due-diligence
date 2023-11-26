@@ -12,7 +12,7 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
 
     if (id) {
       // Fetch a single category by ID
-      const category = await CategoryModel.findOne({ _id: id }, { _id: 0 }).populate('group', 'name');;
+      const category = await CategoryModel.findOne({ _id: id }, { _id: 0 }).populate('group', 'name');
       console.log(category)
 
       if (!category) {
@@ -41,6 +41,7 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     console.log('Received request body:', valueToJson);
 
     const { id, name, questions, group } = valueToJson;
+    // console.log("Group id is",group);
     const dataToInsert = { id, name, questions, group };
 
     // Create a new category in the database
@@ -79,7 +80,10 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
     }
 
   
-    // Save the updated category
+    if(!category.group) {
+      category.group = null;
+    }
+    
     const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
@@ -112,8 +116,11 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
 
     
   
-    // Save the updated category
-    const updatedCategory = await category.save();
+    if(!category.group) {
+  category.group = null;
+}
+
+const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
   } catch (error) {

@@ -48,7 +48,10 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
       // Add the new question to the category
       question.contents.push("");
   
-      // Save the updated category
+      if(!category.group) {
+        category.group = null;
+      }
+      
       const updatedCategory = await category.save();
   
       const questions = await fetchQuestions(categoryId);
@@ -124,7 +127,10 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
     // Remove the content item from the question
     question.contents.splice(contentIndex, 1);
 
-    // Save the updated category
+    if(!category.group) {
+      category.group = null;
+    }
+    
     const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
