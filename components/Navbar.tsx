@@ -1,35 +1,44 @@
-'use client';
 
-import { useUser } from '@auth0/nextjs-auth0/client';
 
 import Link from 'next/link'
 import SearchBar from './SearchBar'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faPerson, faUser, faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { faBars} from '@fortawesome/free-solid-svg-icons';
+import UserDropdown from './UserDropdown';
 
 interface NavbarProps {
   onToggleAside: () => void;
+  onHomeClick: () => void;
 }
 
-export default function Navbar({ onToggleAside }: NavbarProps) {
-  const { user, error, isLoading } = useUser();
+export default function Navbar({ onToggleAside, onHomeClick }: NavbarProps) {
+  
+ 
+
+  // const showHomeContent = () => {
+  //   // setSelectedCategory(null);
+  //   localStorage.setItem("selectedCategoryId", "");
+  // }
+
   return (
     <nav className="flex items-center justify-between p-6 bg-white border-b border-gray-300">
-      <button onClick={onToggleAside} className="text-black mr-6">
+      <button onClick={onToggleAside} className="text-black mr-0 h-full px-4 hover:bg-gray-100">
         <FontAwesomeIcon icon={faBars} />
       </button>
+      <button onClick={onHomeClick}  className=' px-4 mr-2 h-full hover:bg-gray-100'>home</button>
       <SearchBar placeholder='Search Q and As' />
 
       <div className="space-x-6 flex  align-center">
-        {user ? (
-          <Link href="/api/auth/logout">Logout</Link>
+        <UserDropdown />
+      </div>
+      {/* {user ? (
+          <Link onClick={handleLogout} href="/api/auth/logout">Logout</Link>
         ) :
 
-        <Link href="/api/auth/login">login</Link>
+        
+        
 
-        }
-      </div>
-
+        } */}
     </nav>
   )
 }

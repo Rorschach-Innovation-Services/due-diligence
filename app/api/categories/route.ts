@@ -1,5 +1,5 @@
 
-import CategoryModel from '@/models/category';
+import {CategoryModel} from '@/models/category';
 import connectToDatabase from '@/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -12,7 +12,8 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
 
     if (id) {
       // Fetch a single category by ID
-      const category = await CategoryModel.findOne({ _id: id }, { _id: 0 });
+      const category = await CategoryModel.findOne({ _id: id }, { _id: 0 }).populate('group', 'name');;
+      console.log(category)
 
       if (!category) {
         return Response.json({ error: 'Category not found' });

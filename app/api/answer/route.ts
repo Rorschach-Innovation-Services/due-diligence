@@ -1,4 +1,4 @@
-import CategoryModel from "@/models/category";
+import {CategoryModel} from "@/models/category";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export async function POST(req: NextApiRequest, res: NextApiResponse) {

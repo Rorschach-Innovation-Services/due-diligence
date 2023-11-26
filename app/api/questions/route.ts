@@ -1,4 +1,4 @@
-import CategoryModel from '@/models/category';
+import {CategoryModel} from '@/models/category';
 import connectToDatabase from '@/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 

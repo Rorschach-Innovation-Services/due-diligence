@@ -27,6 +27,11 @@ const Layout = ({ children }: LayoutProps) => {
     setAsideOpen(!asideOpen);
   };
 
+  const showHomeContent = () => {
+    setSelectedCategory(null);
+    localStorage.setItem("selectedCategoryId", "");
+  }
+
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       // Close the sidebar if the click is outside of it
@@ -53,15 +58,25 @@ const Layout = ({ children }: LayoutProps) => {
             <FontAwesomeIcon icon={asideOpen ? faTimes : faBars} />
           </button>
         </div>
+
+
+        <button
+          // onClick={handleNewAnswerClick}
+          className="italic ml-4 text-xs text-blue-400 font-bold inline-flex items-center mt-2"
+        >
+          <FontAwesomeIcon icon={faPlus} className="mr-1" />
+          <span>Add Group</span>
+        </button> 
+
+
         <QuestionCategoryList onCategoryChange={handleCategoryChange} />
 
       </aside>
 
       <div className="flex flex-col flex-1 ">
-        <Navbar onToggleAside={toggleAside} />
+        <Navbar onToggleAside={toggleAside} onHomeClick={showHomeContent} />
 
         <main className="p-6 flex-2 bg-gray-100 overflow-y-auto min-h-screen">
-          {/* Page content */}
           {selectedCategory ? <QuestionItemList selectedCategory={selectedCategory} /> :
             <div>
 
