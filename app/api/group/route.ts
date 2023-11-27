@@ -9,12 +9,20 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { searchParams } = new URL(req.url as string);
     const id = searchParams.get('groupId');
+    const name = searchParams.get('groupName'); // Added line to get groupName
 
     if (id) {
       // Fetch a single group by ID
       const group = await GroupModel.findOne({ _id: id });
 
-      
+      if (!group) {
+        return Response.json({ error: 'Group not found' });
+      }
+
+      return Response.json({ group });
+    } else if (name) {
+      // Fetch a single group by name
+      const group = await GroupModel.findOne({ name });
 
       if (!group) {
         return Response.json({ error: 'Group not found' });
@@ -23,8 +31,8 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ group });
     } else {
       // Fetch all categories from the database
-      const categories = await GroupModel.find({}, { id: 1, name: 1, group: 1, _id: 1 });
-      return Response.json({ categories });
+      const groups = await GroupModel.find({}, { name: 1, _id: 1 });
+      return Response.json({ groups });
     }
   } catch (error) {
     // Handle errors
@@ -71,7 +79,7 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Find the group by ID
-    const group = await GroupModel.findOne({ _id: groupId });
+    const group = await GroupModel.findOne({ name: groupId });
     group.name = name
 
     // Check if the group is not found
@@ -81,9 +89,9 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
 
   
     // Save the updated group
-    const updatedgroup = await group.save();
+    const updatedGroup = await group.save();
 
-    return Response.json({ updatedgroup });
+    return Response.json({ updatedGroup });
   } catch (error) {
     console.error('Error updating question:', error);
     return Response.json({ error: 'Internal Server Error' });
@@ -101,7 +109,7 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Find the group by ID
-    const group = await GroupModel.findOne({ _id: groupId });
+    const group = await GroupModel.findOne({ name: groupId });
 
     // Delete the group
     await group.deleteOne();
@@ -111,12 +119,10 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ error: 'group not found' });
     }
 
-    
-  
     // Save the updated group
-    const updatedgroup = await group.save();
+    // const updatedgroup = await group.save();
 
-    return Response.json({ updatedgroup });
+    return Response.json({ group });
   } catch (error) {
     console.error('Error updating question:', error);
     return Response.json({ error: 'Internal Server Error' });

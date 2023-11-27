@@ -12,13 +12,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onToggleAside, onHomeClick }: NavbarProps) {
-  
  
-
-  // const showHomeContent = () => {
-  //   // setSelectedCategory(null);
-  //   localStorage.setItem("selectedCategoryId", "");
-  // }
 
   return (
     <nav className="flex items-center justify-between p-6 bg-white border-b border-gray-300">
@@ -31,14 +25,6 @@ export default function Navbar({ onToggleAside, onHomeClick }: NavbarProps) {
       <div className="space-x-6 flex  align-center">
         <UserDropdown />
       </div>
-      {/* {user ? (
-          <Link onClick={handleLogout} href="/api/auth/logout">Logout</Link>
-        ) :
-
-        
-        
-
-        } */}
     </nav>
   )
 }

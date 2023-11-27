@@ -101,7 +101,7 @@ function QuestionItemList({ selectedCategory, selectedCategoryName }: QuestionIt
 
       return newEditMode;
     });
-    setEditMode(!editMode);
+    // setEditMode(!editMode);
 
     const updatedEditMode = !appEditMode();
     localStorage.setItem('editMode', JSON.stringify(updatedEditMode)); // Save to local storage

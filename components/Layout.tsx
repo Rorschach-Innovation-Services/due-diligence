@@ -7,6 +7,7 @@ import QuestionItemList from "./Questions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faCancel, faClose, faPlus, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from '@auth0/nextjs-auth0/client';
+import { appEditMode } from "@/lib/storage";
 
 
 interface LayoutProps {
@@ -19,10 +20,46 @@ const Layout = ({ children }: LayoutProps) => {
   const [asideOpen, setAsideOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
+  const [isAddingGroup, setIsAddingGroup] = useState(false); // Add this line
+
+  const [newGroupTitle, setNewGroupTitle] = useState<string>("");
+
+  const handleAddGroup = async () => {
+    if (newGroupTitle.trim() !== "") {
+      try {
+        const response = await fetch("/api/group", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: newGroupTitle }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Group added successfully:", data);
+          // Handle the added group, if needed
+        } else {
+          console.error("Failed to add group:", response.statusText);
+          // Handle the error, if needed
+        }
+      } catch (error) {
+        console.error("Error adding group:", error);
+        // Handle the error, if needed
+      } finally {
+        setNewGroupTitle("");
+        setIsAddingGroup(false);
+      }
+    } else {
+      console.warn("Please enter a group title before submitting.");
+    }
+  };
+  
+
 
   const handleCategoryChange = (category: any) => {
     setSelectedCategory(category);
-  };    
+  };
 
   const handleCategoryNameChange = (categoryName: any) => {
     setSelectedCategoryName(categoryName);
@@ -54,7 +91,17 @@ const Layout = ({ children }: LayoutProps) => {
     };
   }, []);
 
-  console.log("CATEGORY NAME IN LAYOUT =", selectedCategoryName)
+  window.addEventListener('storage', (event) => {
+    // Check if updated key is what we want
+    if(event.key === 'editMode') {
+      // Do something with updated value
+      console.log(event.newValue); 
+      console.log("CATEGORY NAME IN LAYOUT =", appEditMode())
+  
+      // Refresh categories state etc
+    }  
+  });
+  
 
   return (
 
@@ -66,16 +113,29 @@ const Layout = ({ children }: LayoutProps) => {
           </button>
         </div>
 
-
         <button
-          // onClick={handleNewAnswerClick}
-          className="italic  ml-4 text-xs text-blue-400 font-bold inline-flex items-center mt-2"
+          onClick={() => setIsAddingGroup(true)} // Updated this line
+          className="italic ml-4 text-xs text-blue-400 font-bold inline-flex items-center mt-2"
         >
           <FontAwesomeIcon icon={faPlus} className="mr-1" />
           <span>Add Group</span>
-        </button> 
+        </button>
 
-
+        {isAddingGroup && (
+          <div className="relative mx-4">
+            <input
+              id="newGroupInput"
+              className="w-full p-1"
+              type="text"
+              onBlur={() => {}} // You might want to handle onBlur if needed
+              onKeyPress={(e) => e.key === "Enter" && handleAddGroup()}
+              placeholder="Enter group title"
+              value={newGroupTitle}
+              onChange={(e) => setNewGroupTitle(e.target.value)}
+              autoFocus
+            />
+          </div>
+        )}
         <QuestionCategoryList onCategoryNameChange={handleCategoryNameChange} onCategoryChange={handleCategoryChange} />
 
       </aside>

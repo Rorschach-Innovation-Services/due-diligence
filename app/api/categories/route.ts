@@ -1,5 +1,5 @@
 
-import {CategoryModel} from '@/models/category';
+import { CategoryModel } from '@/models/category';
 import connectToDatabase from '@/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -32,7 +32,7 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Endpoint for adding a new category: /api/category
+// Endpoint for adding a new category: /api/categories
 export async function POST(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Parse the request body
@@ -59,7 +59,7 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
-    
+
     let passedValue = await new Response(req.body).text();
     let valueToJson = JSON.parse(passedValue);
     const { name } = valueToJson
@@ -79,11 +79,11 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ error: 'Category not found' });
     }
 
-  
-    if(!category.group) {
+
+    if (!category.group) {
       category.group = null;
     }
-    
+
     const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
@@ -97,7 +97,7 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
-    
+
     // Check if categoryId and questionId are provided
     if (!categoryId) {
       return Response.json({ error: 'Category ID and Question ID are required' });
@@ -109,20 +109,21 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
     // Delete the category
     await category.deleteOne();
 
+
     // Check if the category is not found
     if (!category) {
       return Response.json({ error: 'Category not found' });
     }
 
-    
-  
-    if(!category.group) {
-  category.group = null;
-}
 
-const updatedCategory = await category.save();
 
-    return Response.json({ updatedCategory });
+    // if (!category.group) {
+    //   category.group = null;
+    // }
+
+    // const updatedCategory = await category.save();
+
+    return Response.json({ category });
   } catch (error) {
     console.error('Error updating question:', error);
     return Response.json({ error: 'Internal Server Error' });
