@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faCancel, faClose, faPlus, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { appEditMode } from "@/lib/storage";
+import ReactQuill from "react-quill";
 
 
 interface LayoutProps {
@@ -23,6 +24,30 @@ const Layout = ({ children }: LayoutProps) => {
   const [isAddingGroup, setIsAddingGroup] = useState(false); // Add this line
 
   const [newGroupTitle, setNewGroupTitle] = useState<string>("");
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [newGroup, setNewGroup] = useState<boolean>(false);
+  const { user, error, isLoading } = useUser();
+
+  const [value, setValue] = useState('');
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      ['link', 'image'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      // ['blockquote', 'code-block'],
+      [{ 'script': 'sub' }, { 'script': 'super' }],
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'link', 'image',
+    'list', 'bullet',
+    // 'blockquote', 'code-block',
+    'script', 'sub', 'script', 'super'
+  ];
 
   const handleAddGroup = async () => {
     if (newGroupTitle.trim() !== "") {
@@ -38,6 +63,7 @@ const Layout = ({ children }: LayoutProps) => {
         if (response.ok) {
           const data = await response.json();
           console.log("Group added successfully:", data);
+          setNewGroup(true); // to notify the QuestionCategoryList about the new group
           // Handle the added group, if needed
         } else {
           console.error("Failed to add group:", response.statusText);
@@ -49,12 +75,13 @@ const Layout = ({ children }: LayoutProps) => {
       } finally {
         setNewGroupTitle("");
         setIsAddingGroup(false);
+
       }
     } else {
       console.warn("Please enter a group title before submitting.");
     }
   };
-  
+
 
 
   const handleCategoryChange = (category: any) => {
@@ -91,35 +118,36 @@ const Layout = ({ children }: LayoutProps) => {
     };
   }, []);
 
-  window.addEventListener('storage', (event) => {
-    // Check if updated key is what we want
-    if(event.key === 'editMode') {
-      // Do something with updated value
-      console.log(event.newValue); 
-      console.log("CATEGORY NAME IN LAYOUT =", appEditMode())
-  
-      // Refresh categories state etc
-    }  
-  });
-  
+  const handleToggleEditMode = (editMode: boolean): void => {
+    // Handle the change in editMode
+    setEditMode(editMode);
+    console.log("MODE IN LAYOUT:", editMode);
+  };
+
+  const handleBlur = () => {
+    setNewGroupTitle("");
+    setIsAddingGroup(false);
+  };
 
   return (
 
     <div className="flex bg-gray-900">
-      <aside ref={sidebarRef} className={`md:w-2/6 border-r border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside ref={sidebarRef} className={`md:w-2/6 border-r flex flex-col border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4 flex justify-end">
           <button onClick={toggleAside} className="text-white">
             <FontAwesomeIcon icon={asideOpen ? faTimes : faBars} />
           </button>
         </div>
 
-        <button
+        {user && (
+          <button
           onClick={() => setIsAddingGroup(true)} // Updated this line
-          className="italic ml-4 text-xs text-blue-400 font-bold inline-flex items-center mt-2"
+          className="self-center w-5/6 bg-gray-400 p-2 bg-opacity-10 hover:bg-opacity-25 rounded hover:bg-gray-500 italic mb-2 text-xs text-blue-400 font-bold justify-center inline-flex items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-1" />
+          <FontAwesomeIcon icon={faPlus} className="mr-2" />
           <span>Add Group</span>
         </button>
+        )}
 
         {isAddingGroup && (
           <div className="relative mx-4">
@@ -127,7 +155,7 @@ const Layout = ({ children }: LayoutProps) => {
               id="newGroupInput"
               className="w-full p-1"
               type="text"
-              onBlur={() => {}} // You might want to handle onBlur if needed
+              onBlur={handleBlur} // You might want to handle onBlur if needed
               onKeyPress={(e) => e.key === "Enter" && handleAddGroup()}
               placeholder="Enter group title"
               value={newGroupTitle}
@@ -136,19 +164,29 @@ const Layout = ({ children }: LayoutProps) => {
             />
           </div>
         )}
-        <QuestionCategoryList onCategoryNameChange={handleCategoryNameChange} onCategoryChange={handleCategoryChange} />
-
+        <QuestionCategoryList editMode={editMode} onNewGroup={newGroup} onCategoryNameChange={handleCategoryNameChange} onCategoryChange={handleCategoryChange} />
       </aside>
 
+
       <div className="flex flex-col flex-1 ">
-        <Navbar onToggleAside={toggleAside} onHomeClick={showHomeContent} />
+        <Navbar onEditModeChange={handleToggleEditMode} onToggleAside={toggleAside} onHomeClick={showHomeContent} />
 
         <main className="p-6 flex-2 bg-gray-100 overflow-y-auto min-h-screen">
-          {selectedCategory ? <QuestionItemList selectedCategoryName={selectedCategoryName} selectedCategory={selectedCategory} /> :
+          {selectedCategory ? <QuestionItemList editMode={editMode} selectedCategoryName={selectedCategoryName} selectedCategory={selectedCategory} /> :
             <div>
-
+              <ReactQuill
+                theme="snow"
+                value={""}
+                onChange={(newContent) => {
+                  
+                }}
+                modules={modules}
+                formats={formats}
+                placeholder="Add answer..."
+                style={{ height: '100%', width: "100%", fontSize: '14px' }}
+              />
               <br />
-              <div className=" text-sm max-w-screen-lg mx-auto whitespace-pre-line text-justify">
+              {/* <div className=" text-sm max-w-screen-lg mx-auto whitespace-pre-line text-justify">
                 <h1 className="font-bold text-lg">INTRODUCTION</h1>
                 <p>Ethical and financial probity in the administration of research grants and in doing the research itself is a sacrosanct principle for UCT. Funders typically want information about UCT’s overall governance structure, how it manages overall risk in the university, how it specifically manages risk, how it ensures corruption-free and ethical procurement, how it treats its staff and human subjects in research, how it ensures all other aspects of the ethical conduct of research, and how it operates ethically at a university-wide level. It is imperative that the University should be compliant with international standards, and the fact that funders are increasingly probing in detail the exercise of due diligence by awardees (and the institutions in which they carry out their research) presents UCT with a challenge. The challenge is that the level of the scrutiny by funders has meant that individual researchers who are applying for, or who have received, funding are requested to answer increasingly complex sets of due-diligence questions relating to compliance as well as to provide evidence of the content and implementation of the policies underlying the compliance. This is at task which individual researchers can only do with great difficulty and currently, RC&I, CFR and IGH assist researchers in answering these questions, but they have been rendering this assistance in a situation where there is no clear policy and procedure governing this important aspect of research compliance. In order to rectify this, two interventions are necessary.</p>
                 <br />
@@ -185,7 +223,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <p>
                   The questions and answers are grouped into broad categories (but it should be noted that the categories overlap and different funders place certain questions in different categories (e.g. questions about financial risk management may be asked either under the general rubric of financial governance or under that of general risk management; and questions regarding the University’s measures against becoming party through its procurement policies to forms of modern slavery may be asked under the general heading of the protection of human rights or under the heading of procurement policies).
                 </p>
-              </div>
+              </div> */}
             </div>
           }
           {children}

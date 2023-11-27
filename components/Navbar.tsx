@@ -9,10 +9,16 @@ import UserDropdown from './UserDropdown';
 interface NavbarProps {
   onToggleAside: () => void;
   onHomeClick: () => void;
+  onEditModeChange: (editMode: boolean) => void;
 }
 
-export default function Navbar({ onToggleAside, onHomeClick }: NavbarProps) {
+export default function Navbar({ onToggleAside, onHomeClick, onEditModeChange }: NavbarProps) {
  
+
+  function handleToggleEditMode(editMode: boolean): void {
+    console.log("EDOT MODE IN NavBar:", editMode)
+    onEditModeChange(editMode);
+  }
 
   return (
     <nav className="flex items-center justify-between p-6 bg-white border-b border-gray-300">
@@ -23,7 +29,7 @@ export default function Navbar({ onToggleAside, onHomeClick }: NavbarProps) {
       <SearchBar placeholder='Search Q and As' />
 
       <div className="space-x-6 flex  align-center">
-        <UserDropdown />
+        <UserDropdown onToggleEditMode={handleToggleEditMode} />
       </div>
     </nav>
   )

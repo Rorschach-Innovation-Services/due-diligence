@@ -2,25 +2,35 @@
 
 import { useUser } from '@auth0/nextjs-auth0/client';
 
-import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEyeSlash, faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
 import React, { useState } from 'react';
 
 
-interface NavbarProps {
-    onHomeClick: () => void;
-}
+interface UserDropdownProps {
+    onToggleEditMode: (editMode: boolean) => void;
+  }
 
 
-export default function UserDropdown() {
+export default function UserDropdown({ onToggleEditMode }: UserDropdownProps) {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const { user, error, isLoading } = useUser();
+    const [editMode, setEditMode] = useState(false);
 
     const toggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
         localStorage.setItem('editMode', JSON.stringify(false));
     };
+
+    const toggleEditMode = () => {
+        const newEditMode = !editMode
+        localStorage.setItem('editMode', JSON.stringify(newEditMode));
+        setEditMode(newEditMode);
+        onToggleEditMode(newEditMode);
+    }
+
+
 
 
     return (
@@ -45,33 +55,37 @@ export default function UserDropdown() {
                         className="z-10 absolute right-0 mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600"
                     >
                         <div className="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                            <div className='font-medium'>{user.name}</div>
+                            {/* <div className='font-medium'>{user.name}</div> */}
                             <div className=" truncate">{user.email}</div>
                         </div>
                         <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownInformationButton">
                             <li>
-                                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                <p className="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                     Profile
-                                </a>
+                                </p>
                             </li>
                             <li>
-                                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                <button onClick={toggleEditMode} className={`w-full hover:bg-gray-100 dark:hover:bg-gray-600 block px-4 py-2 italic text-sm text-${editMode ? "red" : "blue"}-400 font-bold inline-flex items-center`}>
+                                    <FontAwesomeIcon className="mr-1" icon={editMode ? faEyeSlash : faEye} />
+                                    <span>{editMode ? "Disable Edit" : "Enable Edit"}</span>
+                                </button>
+                                {/* <p onClick={toggleEditMode} className="block px-4 cursor-pointer py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                     Enable edit
-                                </a>
+                                </p> */}
                             </li>
-                            <li>
-                                <a href="#" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                            {/* <li>
+                                <p className="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                     Settings
-                                </a>
-                            </li>
+                                </p>
+                            </li> */}
                         </ul>
                         <div className="py-2">
-                            <a
+                            <Link
                                 href="/api/auth/logout"
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                             >
                                 Sign out
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 )}

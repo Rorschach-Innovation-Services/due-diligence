@@ -26,9 +26,11 @@ interface Category {
 interface QuestionCategoryListProps {
   onCategoryChange: (selectedCategory: any) => void;
   onCategoryNameChange: (selectedCategoryName: any) => void;
+  onNewGroup: boolean;
+  editMode: boolean;
 }
 
-export default function QuestionCategoryList({ onCategoryChange, onCategoryNameChange }: QuestionCategoryListProps) {
+export default function QuestionCategoryList({ onCategoryChange, onCategoryNameChange, onNewGroup, editMode }: QuestionCategoryListProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<{ [group: string]: boolean }>({});
@@ -73,6 +75,10 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
     loadGroupedCategories();
     loadAllGroups(); // Fetch all groups when the component mounts
   }, []);
+  useEffect(() => {
+    loadGroupedCategories();
+    loadAllGroups(); // Fetch all groups when the component mounts
+  }, [onNewGroup]);
 
   const handleAddCategory = async (groupName: string) => {
     // Show/hide input box for adding a new category in the specific group
@@ -115,6 +121,8 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
         return;
       }
       handleCancelAddCategory()
+      loadGroupedCategories();
+      loadAllGroups();
 
     } catch (error) {
       console.error("Error adding category:", error);
@@ -402,7 +410,8 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
 
       if (response.ok) {
         const data = await response.json();
-
+        loadGroupedCategories();
+        loadAllGroups();
         const updatedCategory = data.updatedCategory;
 
       } else {
@@ -442,7 +451,7 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4" style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
 
       <div className="space-y-2">
         {loading ? (
@@ -454,7 +463,7 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
                 className="flex items-center justify-between cursor-pointer"
               >
                 <div className='flex items-center'>
-                  {groupName !== 'UNGROUPED' && (
+                  {groupName !== 'UNGROUPED' && user && editMode && (
                     <>
                       <DeleteIcon onClick={() => handleDeleteGroup(groupName)} className='text-red-500 hover:text-red-300 text-xs' />
                       <EditIcon onClick={() => startEditGroupName(groupName)} className='text-gray-500 hover:text-gray-300 mx-3 text-xs' />
@@ -487,13 +496,15 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
               {/* Render categories within the group, conditionally based on group's expanded state */}
               {expandedGroups[groupName] && (
                 <div className="ml-4">
-                  <button
-                    className="italic text-xs opacity-50 text-green-400 font-bold inline-flex items-center mt-2"
-                    onClick={() => setIsAddingCategory(groupName)}
-                  >
-                    <FontAwesomeIcon icon={faPlus} className="mr-1" />
-                    <span>Add Category</span>
-                  </button>
+                  {user && editMode && (
+                    <button
+                      className="italic text-xs opacity-50 text-green-400 font-bold inline-flex items-center mt-2"
+                      onClick={() => setIsAddingCategory(groupName)}
+                    >
+                      <FontAwesomeIcon icon={faPlus} className="mr-1" />
+                      <span>Add Category</span>
+                    </button>
+                  )}
 
                   {/* Input box for adding a new category (conditionally rendered) */}
                   {isAddingCategory === groupName && (
@@ -535,7 +546,7 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
                             onClick={() => handleCategoryChange(cat._id)}
                           >
                             {cat.name.charAt(0).toUpperCase() + cat.name.slice(1).toLowerCase()}
-                            {cat._id === selectedCategoryId && user && (
+                            {cat._id === selectedCategoryId && user && editMode && (
                               <div className="absolute top-0 right-0 bottom-0">
                                 <div className="options-dots rounded py-2 shadow-md bg-gray-500 px-4">
                                   <FontAwesomeIcon icon={faEllipsisH} onClick={() => showMoreOptions(cat._id)} />
@@ -560,10 +571,21 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
           ))
         )}
       </div>
+      <style jsx>{`
+        ::-webkit-scrollbar {
+          width: 12px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background-color: #4a5568; /* Replace with your desired color */
+          border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background-color: #2d3748; /* Replace with your desired color */
+          border-radius: 6px;
+        }
+      `}</style>
     </div>
   );
 }
-function loadCategoriesData() {
-  throw new Error('Function not implemented.');
-}
-

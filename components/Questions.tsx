@@ -32,7 +32,8 @@ interface QuestionItemProps {
   // onAddNewAnswer: (questionId: string) => void;
   // onDeleteContent: (questionId: string, contentIndex: number) => void;
   selectedCategory: Category | null;
-  selectedCategoryName: string | null
+  selectedCategoryName: string | null;
+  editMode: boolean;
 }
 
 interface Category {
@@ -41,7 +42,7 @@ interface Category {
   questions: Array<Question>;
 }
 
-function QuestionItemList({ selectedCategory, selectedCategoryName }: QuestionItemProps) {
+function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: QuestionItemProps) {
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<string[]>([]);
   const [textareaValues, setTextareaValues] = useState<{ [key: string]: string[] | undefined }>({});
   const [titleValues, setTitleValues] = useState<{ [key: string]: string }>({});
@@ -49,11 +50,34 @@ function QuestionItemList({ selectedCategory, selectedCategoryName }: QuestionIt
   const [contentEditMode, setContentEditMode] = useState<{ [key: string]: number | null }>({});
   const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
   const [newQuestion, setNewQuestion] = useState("");
-  const [editMode, setEditMode] = useState(false);
   const { user, error, isLoading } = useUser();
   
   
+  console.log("MODE IN QuestionItemList:", editMode);
   
+  useEffect(()=>{
+    setContentEditMode((prevEditMode) => {
+      const newEditMode: { [key: string]: number | null } = {};
+
+      Object.keys(textareaValues).forEach((questionId) => {
+        newEditMode[questionId] = prevEditMode[questionId] !== null ? null : 0;
+      });
+
+      // Toggle edit mode for the question title
+      newEditMode.title = prevEditMode.title !== null ? null : 0;
+
+      return newEditMode;
+    });
+    // setEditMode(!editMode);
+
+    // const updatedEditMode =editMode;
+    localStorage.setItem('editMode', JSON.stringify(editMode)); // Save to local storage
+    // setFocusedQuestion(null);
+    console.log("MODE:", editMode)
+    // Set the currently focused question to null to reset the focus
+    setFocusedQuestion(null);
+  }, [editMode]);
+
   const [localStorageCategoryName, setLocalStorageCategoryName] = useState<string | null>(
     localStorage.getItem("selectedCategoryName")
   );
@@ -87,30 +111,7 @@ function QuestionItemList({ selectedCategory, selectedCategoryName }: QuestionIt
     // 'script', 'sub', 'script', 'super'
   ];
 
-  const handleEditAllClick = () => {
-    // Enable editing on all textareas, including the question title
-    setContentEditMode((prevEditMode) => {
-      const newEditMode: { [key: string]: number | null } = {};
-
-      Object.keys(textareaValues).forEach((questionId) => {
-        newEditMode[questionId] = prevEditMode[questionId] !== null ? null : 0;
-      });
-
-      // Toggle edit mode for the question title
-      newEditMode.title = prevEditMode.title !== null ? null : 0;
-
-      return newEditMode;
-    });
-    // setEditMode(!editMode);
-
-    const updatedEditMode = !appEditMode();
-    localStorage.setItem('editMode', JSON.stringify(updatedEditMode)); // Save to local storage
-    // setFocusedQuestion(null);
-    console.log("MODE:", updatedEditMode)
-    // Set the currently focused question to null to reset the focus
-    setFocusedQuestion(null);
-  };
-
+  
   useEffect(() => {
     // Fetch questions from the database based on the selected category's id
     const fetchQuestions = async () => {
@@ -352,28 +353,21 @@ function QuestionItemList({ selectedCategory, selectedCategoryName }: QuestionIt
   console.log("selectedCategoryName in QUestion:", selectedCategoryName);
   return (
     <div className="relative p-4 pt-0">
+     
+      <div className="flex">
+        <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
+          {selectedCategory ? `${localStorage.getItem("selectedCategoryName")}` : "Category"}
+        </h2>
+      </div>
       {user && (
-        <>
-          <button onClick={handleEditAllClick} className={`mb-4 italic text-sm text-${appEditMode() ? "red" : "blue"}-400 font-bold inline-flex items-center`}>
-            <FontAwesomeIcon className="mr-1" icon={appEditMode() ? faEyeSlash : faEye} />
-            <span>{appEditMode() ? "Disable Edit" : "Enable Edit"}</span>
-          </button>
-
-
           <div className="flex justify-end align-center mt-5 mb-5">
             <button onClick={handleNewQuestionClick} className=" bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
               <span>New Question</span>
             </button>
           </div>
-        </>
       )
       }
-      <div className="flex">
-        <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
-          {selectedCategory ? `${localStorage.getItem("selectedCategoryName")}` : "Category"}
-        </h2>
-      </div>
       <div className="space-y-4 relative">
         {questionsFromDb.slice()
           .sort((a, b) => b._id.localeCompare(a._id))
