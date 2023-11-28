@@ -6,12 +6,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash, faMinus, faPlus, faSave } from "@fortawesome/free-solid-svg-icons";
 import 'react-quill/dist/quill.snow.css';
-import { appEditMode } from "@/lib/storage";
+// import { appEditMode } from "@/lib/storage";
 import QuestionItem from "./Answers";
 import { EditIcon } from "@/icons/EditIcon";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
 import { DeleteIcon } from "@/icons/Delete";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 
 interface Question {
   _id: string;
@@ -51,11 +55,11 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
   const [questionsFromDb, setQuestionsFromDb] = useState<Array<Question>>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const { user, error, isLoading } = useUser();
-  
-  
+
+
   console.log("MODE IN QuestionItemList:", editMode);
-  
-  useEffect(()=>{
+
+  useEffect(() => {
     setContentEditMode((prevEditMode) => {
       const newEditMode: { [key: string]: number | null } = {};
 
@@ -71,9 +75,9 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
     // setEditMode(!editMode);
 
     // const updatedEditMode =editMode;
-    localStorage.setItem('editMode', JSON.stringify(editMode)); // Save to local storage
+    // localStorage.setItem('editMode', JSON.stringify(editMode)); // Save to local storage
     // setFocusedQuestion(null);
-    console.log("MODE:", editMode)
+    // console.log("MODE:", editMode)
     // Set the currently focused question to null to reset the focus
     setFocusedQuestion(null);
   }, [editMode]);
@@ -86,7 +90,7 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 
-  if (selectedCategory && selectedCategoryName ) {
+  if (selectedCategory && selectedCategoryName) {
     localStorage.setItem("selectedCategoryName", selectedCategoryName)
     // setLocalStorageCategoryName(selectedCategoryName)
   }
@@ -111,7 +115,7 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
     // 'script', 'sub', 'script', 'super'
   ];
 
-  
+
   useEffect(() => {
     // Fetch questions from the database based on the selected category's id
     const fetchQuestions = async () => {
@@ -119,6 +123,7 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories?id=${selectedCategory?._id}&sort={_id: -1}`);
         const data = await response.json();
 
+        console.log(selectedCategory)
         console.log("Sorted Qs", data);
 
         // Assuming the data structure is similar to what you provided in the Postman response
@@ -162,7 +167,7 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
       setTitleValues(initialTitleValues);
     }
   }, [questionsFromDb]);
-  
+
 
   const handleQuestionClick = (questionId: string) => {
     setExpandedQuestionIds((prevIds) => {
@@ -171,53 +176,74 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
       return newIds;
     });
 
+
     setFocusedQuestion(questionId);
   };
 
   const handleNewQuestionClick = async () => {
+    const hasQuestionWithEmptyTitle = questionsFromDb.some(
+      (question) => !question.title || !question.title.trim()
+    );
+  
+    if (hasQuestionWithEmptyTitle) {
+      toast.error("Cannot have more than one empty question!");
+      return;
+    }
+  
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log("RESponse:", response)
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
       if (response.ok) {
         const data = await response.json();
-
-        console.log("After Adding:", data);
+  
         const newQuestion = data.newQuestion;
+  
         if (newQuestion) {
-          // Update the state with the new question
-          setQuestionsFromDb((prevQuestions) => [...prevQuestions, newQuestion]);
-          setExpandedQuestionIds((prevIds) => [...prevIds, newQuestion._id]);
-
-          console.log("Lastedited =", newQuestion.lastedited);
-
-          const newQuestionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`, {
-            method: 'GET',
-          });
-
-          console.log("Question data =", newQuestionResponse);
-
-          if (newQuestionResponse.ok) {
-            const info = await newQuestionResponse.json();
-            setNewQuestion(newQuestion.lastedited);
+          // Fetch the newly added question by its lastedited value
+          const questionResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&lastedited=${newQuestion.lastedited}`,
+            {
+              method: "GET",
+            }
+          );
+  
+          if (questionResponse.ok) {
+            const questionData = await questionResponse.json();
+            const addedQuestion = questionData.question;
+  
+            setQuestionsFromDb((prevQuestions) => [
+              ...prevQuestions,
+              addedQuestion, // Add the newly fetched question to the state
+            ]);
+  
+            // Expand the newly added question based on its _id
+            handleQuestionClick(addedQuestion._id);
+  
+            setNewQuestion(addedQuestion.lastedited);
+          } else {
+            console.error("Failed to fetch the newly added question");
           }
         } else {
-          console.error('Invalid response format:', data);
+          console.error("Invalid response format:", data);
         }
       } else {
-        console.error('Failed to create a new question:', response.statusText);
+        console.error("Failed to create a new question:", response.statusText);
       }
     } catch (error) {
-      console.error('Error creating a new question:', error);
+      console.error("Error creating a new question:", error);
     }
   };
-
+  
+  
+  
   const handleDeleteQuestion = async (questionId: string) => {
     try {
       let url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&questionId=${questionId}`;
@@ -353,19 +379,19 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
   console.log("selectedCategoryName in QUestion:", selectedCategoryName);
   return (
     <div className="relative p-4 pt-0">
-     
+      <ToastContainer />
       <div className="flex">
         <h2 className="text-l text-blue-900 font-bold px-4 py-2 rounded bg-blue-100 mb-5" style={{ width: "100%" }}>
-          {selectedCategory ? `${localStorage.getItem("selectedCategoryName")}` : "Category"}
+          {selectedCategory ? `${selectedCategory.name}` : "Category"}
         </h2>
       </div>
-      {user && (
-          <div className="flex justify-end align-center mt-5 mb-5">
-            <button onClick={handleNewQuestionClick} className=" bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
-              <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              <span>New Question</span>
-            </button>
-          </div>
+      {user && editMode && (
+        <div className="flex justify-end align-center mt-5 mb-5">
+          <button onClick={handleNewQuestionClick} className=" bg-gray-300 hover:bg-gray-400 text-sm text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center">
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            <span>New Question</span>
+          </button>
+        </div>
       )
       }
       <div className="space-y-4 relative">
@@ -378,12 +404,12 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
                   {expandedQuestionIds.includes(question._id) ? (
                     <div className="mr-2 flex w-full cursor-pointer">
                       <div className="flex w-full items-start">
-                        {appEditMode() ? (<textarea
+                        {editMode ? (<textarea
                           placeholder="Please enter the question..."
-                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${appEditMode() ? "border-green-500 border-1" : ""
+                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editMode ? "border-green-500 border-1" : ""
                             }`}
                           value={titleValues[question._id] || ""}
-                          readOnly={!appEditMode()}
+                          readOnly={!editMode}
                           onChange={(e) => {
                             setTitleValues((prevValues) => ({
                               ...prevValues,
@@ -429,6 +455,7 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
                   onUpdateQuestion={handleUpdateQuestion}
                   onAddNewAnswer={handleNewAnswer}
                   onDeleteContent={handleDeleteContent}
+                  editMode={editMode}
                 />
               )}
             </div>

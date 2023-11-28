@@ -45,6 +45,8 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
   const [categoryInEdit, setCategoryInEdit] = useState<Category | null>(null);
   const [newCategoryTitle, setNewCategoryTitle] = useState<string>("");
   const [newGroupTitle, setNewGroupTitle] = useState<string>("");
+  const [hasSelectedCategory, setHasSelectedCategory] = useState<boolean>(false);
+
 
   const [isAddingCategory, setIsAddingCategory] = useState<string | null>(null);
 
@@ -103,7 +105,6 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
       // Prepare the request body
 
 
-      console.log("new category:", requestBody);
 
 
       // Send a POST request to add the new category
@@ -114,6 +115,14 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
         },
         body: JSON.stringify(requestBody),
       });
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log("New Category:", data.category)
+        setCategories((prevCategories) => [...prevCategories, data.category]);
+        console.log("Categories:", categories)
+        onCategoryChange(data.category);
+      }
 
       // Validate the new category title
       if (newCategoryTitle.trim() === "") {
@@ -189,13 +198,13 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
           prevCategories.map((cat) => (cat._id === categoryId ? categoryInEdit : cat))
         );
 
-        console.log("Cat EDIT:", categoryInEdit.name)
+        // console.log("Cat EDIT:", categoryInEdit.name)
         onCategoryNameChange(categoryInEdit.name)
         // if (categoryInEdit.name) {
-        localStorage.setItem("selectedCategoryName", categoryInEdit.name);
+        // localStorage.setItem("selectedCategoryName", categoryInEdit.name);
         // }
 
-        console.log("selectedCategory===", categoryInEdit.name, "===", localStorage.getItem("selectedCategoryName"))
+        // console.log("selectedCategory===", categoryInEdit.name, "===", localStorage.getItem("selectedCategoryName"))
 
 
         setRenameCategoryId(null);
@@ -254,10 +263,26 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
     setMoreOptionsCategoryId(null);
     const selectedCategory = categories.find((cat) => cat._id === categoryId);
 
+    console.log(categories)
+    console.log(selectedCategory)
+    console.log(categoryId)
+
     onCategoryChange(selectedCategory);
     // selectedCategory.name = localStorage.getItem("selectedCategoryName")
 
   };
+
+  useEffect(() => {
+    // Retrieve the selected category ID from localStorage
+    const storedCategoryId = localStorage.getItem("selectedCategoryId");
+
+    // Set the selected category ID in the component state
+    if (storedCategoryId) {
+      setSelectedCategoryId(storedCategoryId);
+    }
+  }, []);
+
+
 
   const groupCategories = async (categories: Category[]) => {
     const groupedCategories: { [group: string]: Category[] } = {};
@@ -309,17 +334,28 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
     setLoading(false);
   };
   useEffect(() => {
-
+    const storedExpandedGroups = localStorage.getItem('expandedGroups');
+    if (storedExpandedGroups) {
+      setExpandedGroups(JSON.parse(storedExpandedGroups));
+    }
 
     loadGroupedCategories();
   }, []);
 
-  const toggleGroup = (group: string) => {
-    setExpandedGroups((prevExpandedGroups) => ({
-      ...prevExpandedGroups,
-      [group]: !prevExpandedGroups[group],
-    }));
-  };
+  const toggleGroup = (groupName: string) => {
+
+    const shouldExpand = categories.some(
+      cat => cat.group === groupName && cat._id === selectedCategoryId
+    );
+
+    setExpandedGroups(prevGroups => {
+      return {
+        ...prevGroups,
+        [groupName]: shouldExpand || !prevGroups[groupName]
+      }
+    });
+
+  }
 
   const showMoreOptions = (categoryId: string) => {
     setMoreOptionsCategoryId(categoryId);
@@ -491,8 +527,6 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
                 </div>
                 <FontAwesomeIcon onClick={() => toggleGroup(groupName)} className="ml-2 text-sm opacity-25 text-gray-100 font-bold" icon={expandedGroups[groupName] ? faChevronUp : faChevronDown} />
               </div>
-
-
               {/* Render categories within the group, conditionally based on group's expanded state */}
               {expandedGroups[groupName] && (
                 <div className="ml-4">

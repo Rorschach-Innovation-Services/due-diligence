@@ -1,4 +1,4 @@
-import {CategoryModel} from '@/models/category';
+import { CategoryModel } from '@/models/category';
 import connectToDatabase from '@/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -10,6 +10,7 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
+    const lastedited = searchParams.get('lastedited');
     const questionId = "none"; // Recently added question will have a none ID
 
     // Ensure categoryId and questionId are provided
@@ -27,8 +28,16 @@ export async function GET(req: NextApiRequest, res: NextApiResponse) {
       return Response.json({ error: 'Category not found' });
     }
 
-    // Find the question by ID in the category's questions array
-    const question = category.questions.find((q: { id: string; }) => q.id == questionId);
+    let question
+    if (lastedited) {
+      // Find the question by lastedited in the category's questions array
+      question = category.questions.find((q: {
+        lastedited: string; id: string;
+      }) => q.lastedited == lastedited);
+    } else {
+      // Find the question by ID in the category's questions array
+      question = category.questions.find((q: { id: string; }) => q.id == questionId);
+    }
 
     // Check if the question is not found
     if (!question) {
@@ -78,7 +87,7 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
     if (lastedited) {
 
       questionIndex = category.questions.findIndex((q: { lastedited: string; _id: string | string[]; }) => q.lastedited == lastedited);
-      
+
       console.log("resp", questionIndex)
     } else {
       console.log("Cate....", questionId)
@@ -94,10 +103,10 @@ export async function PUT(req: NextApiRequest, res: NextApiResponse) {
     category.questions[questionIndex].title = title;
     category.questions[questionIndex].contents = contents;
 
-    if(!category.group) {
+    if (!category.group) {
       category.group = null;
     }
-    
+
     const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
@@ -153,10 +162,10 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
     // Remove the question from the category
     category.questions.splice(questionIndex, 1);
 
-    if(!category.group) {
+    if (!category.group) {
       category.group = null;
     }
-    
+
     const updatedCategory = await category.save();
 
     return Response.json({ updatedCategory });
@@ -201,10 +210,10 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     // Add the new question to the category
     category.questions.push(newQuestion);
 
-    if(!category.group) {
+    if (!category.group) {
       category.group = null;
     }
-    
+
     const updatedCategory = await category.save();
 
     const questions = await fetchQuestions(categoryId);

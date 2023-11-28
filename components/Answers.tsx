@@ -8,7 +8,7 @@ import { faArrowUpFromGroundWater, faEdit, faEye, faEyeSlash, faMinus, faPlus, f
 import { DeleteIcon } from "@/icons/Delete";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { appEditMode } from "@/lib/storage";
+// import { appEditMode } from "@/lib/storage";
 interface Question {
   _id: string;
   title: string;
@@ -27,6 +27,7 @@ interface QuestionItemProps {
   onUpdateQuestion: (questionId: string) => void;
   onAddNewAnswer: (questionId: string) => void;
   onDeleteContent: (questionId: string, contentIndex: number) => void;
+  editMode: boolean;
 }
 
 const QuestionItem: React.FC<QuestionItemProps> = ({
@@ -41,6 +42,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   onUpdateQuestion,
   onAddNewAnswer,
   onDeleteContent,
+  editMode,
 }) => {
 
   const [value, setValue] = useState('');
@@ -108,11 +110,11 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
       {question.contents.map((content, index) => (
         <div
           key={index}
-          className={`mb-3 flex items-start justify-start mt-2 relative p-0 border-blue-500 ${appEditMode() ? "bg-gray-100" : "bg-blue-50"} border
+          className={`mb-3 flex items-start justify-start mt-2 relative p-0 border-blue-500 ${editMode ? "bg-gray-100" : "bg-blue-50"} border
             } rounded text-sm`}
           style={{ width: "100%" }}
         >
-          {appEditMode() ? (
+          {editMode ? (
             <>
               <ReactQuill
                 theme="snow"
@@ -150,7 +152,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
         </div>
       ))}
 
-      {appEditMode() &&
+      {editMode &&
         <>
           <button
             onClick={handleNewAnswerClick}

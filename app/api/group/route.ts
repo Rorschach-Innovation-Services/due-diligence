@@ -51,9 +51,10 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
 
     const { name } = valueToJson;
     const dataToInsert = { name };
+    console.log(dataToInsert)
 
     // Create a new group in the database
-    const result = await GroupModel.create(dataToInsert);
+    const result = await GroupModel.create(valueToJson);
 
     // Return the added group
     return Response.json({ message: 'Group added successfully', data: result });

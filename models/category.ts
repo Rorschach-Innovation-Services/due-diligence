@@ -41,6 +41,7 @@ const questionSchema = new Schema<Question>({
 interface Category extends Document {
   id?: string;
   name?: string;
+  lastedited: string;
   group: Schema.Types.ObjectId;
   questions?: Question[];
 }
@@ -48,6 +49,7 @@ interface Category extends Document {
 const categorySchema = new Schema<Category>({
   id: { type: String, required: false },
   name: { type: String, default: '', required: false },
+  lastedited: { type: String, required: false },
   group: { type: Schema.Types.ObjectId, ref: 'Group', required: false },
   questions: { type: [questionSchema], default: [], required: false },
 });

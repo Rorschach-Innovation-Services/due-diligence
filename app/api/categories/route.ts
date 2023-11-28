@@ -42,13 +42,16 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
 
     const { id, name, questions, group } = valueToJson;
     // console.log("Group id is",group);
-    const dataToInsert = { id, name, questions, group };
+    const dataToInsert = { id, name, questions, group, lastedited: new Date().toISOString(), };
+
+    // // Add the new question to the category
+    // category.questions.push(newQuestion);
 
     // Create a new category in the database
-    const result = await CategoryModel.create(dataToInsert);
+    const category = await CategoryModel.create(dataToInsert);
 
     // Return the added category
-    return Response.json({ message: 'Category added successfully', data: result });
+    return Response.json({ category });
   } catch (error) {
     // Handle errors
     console.error('Error adding category:', error);

@@ -7,7 +7,7 @@ import QuestionItemList from "./Questions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faCancel, faClose, faPlus, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { appEditMode } from "@/lib/storage";
+// import { appEditMode } from "@/lib/storage";
 import ReactQuill from "react-quill";
 
 
@@ -82,10 +82,30 @@ const Layout = ({ children }: LayoutProps) => {
     }
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        const data = await response.json();
+        const initialSelectedCategoryId = localStorage.getItem("selectedCategoryId");
+        const initialSelectedCategory = data.categories.find((cat: any) => cat._id === initialSelectedCategoryId);
+        // console.log("initialSelectedCategoryId:", initialSelectedCategoryId);
+        // console.log("initialSelectedCategory:", initialSelectedCategory);
+        setSelectedCategory(initialSelectedCategory);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+  
 
 
   const handleCategoryChange = (category: any) => {
     setSelectedCategory(category);
+    localStorage.setItem("selectedCategoryId", category?._id);
+    localStorage.setItem("selectedCategoryName", category?.name);
   };
 
   const handleCategoryNameChange = (categoryName: any) => {
@@ -98,10 +118,11 @@ const Layout = ({ children }: LayoutProps) => {
 
   const showHomeContent = () => {
     setSelectedCategory(null);
-    localStorage.setItem("selectedCategoryId", "");
+    // localStorage.setItem("selectedCategoryId", "");
   }
 
   useEffect(() => {
+    setSelectedCategory
     const handleOutsideClick = (event: MouseEvent) => {
       // Close the sidebar if the click is outside of it
       if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
@@ -129,6 +150,7 @@ const Layout = ({ children }: LayoutProps) => {
     setIsAddingGroup(false);
   };
 
+  console.log("Selected Category IN LAYOUT is:", selectedCategory)
   return (
 
     <div className="flex bg-gray-900">
@@ -139,14 +161,14 @@ const Layout = ({ children }: LayoutProps) => {
           </button>
         </div>
 
-        {user && (
+        {user && editMode && (
           <button
-          onClick={() => setIsAddingGroup(true)} // Updated this line
-          className="self-center w-5/6 bg-gray-400 p-2 bg-opacity-10 hover:bg-opacity-25 rounded hover:bg-gray-500 italic mb-2 text-xs text-blue-400 font-bold justify-center inline-flex items-center"
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" />
-          <span>Add Group</span>
-        </button>
+            onClick={() => setIsAddingGroup(true)} // Updated this line
+            className="self-center w-5/6 bg-green-400 p-2 bg-opacity-10 hover:bg-opacity-25 rounded hover:bg-green-500 italic mb-2 text-xs text-green-400 font-bold justify-center inline-flex items-center"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            <span>Add Group</span>
+          </button>
         )}
 
         {isAddingGroup && (
@@ -178,7 +200,7 @@ const Layout = ({ children }: LayoutProps) => {
                 theme="snow"
                 value={""}
                 onChange={(newContent) => {
-                  
+
                 }}
                 modules={modules}
                 formats={formats}
