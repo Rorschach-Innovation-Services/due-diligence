@@ -1,8 +1,8 @@
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface UserDropdownProps {
   onToggleEditMode: (editMode: boolean) => void;
@@ -12,18 +12,42 @@ export default function UserDropdown({ onToggleEditMode }: UserDropdownProps) {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const { user, error, isLoading } = useUser();
   const [editMode, setEditMode] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Check local storage for the initial value of editMode
     const storedEditMode = localStorage.getItem('editMode');
     if (storedEditMode !== null) {
-        const parsedEditMode = JSON.parse(storedEditMode);
-        setEditMode(parsedEditMode);
-        onToggleEditMode(parsedEditMode);
+      const parsedEditMode = JSON.parse(storedEditMode);
+      setEditMode(parsedEditMode);
+      onToggleEditMode(parsedEditMode);
     }
   }, []); 
 
-  console.log("LAYOUT MODE:", editMode)
+  const handleClickOutside = (event: MouseEvent) => {
+    // Check if dropdownRef.current is null
+    if (dropdownRef.current === null || !(event.target instanceof Node)) {
+      return;
+    }
+  
+    // Check if the click is outside the dropdown
+    if (!dropdownRef.current.contains(event.target)) {
+      setDropdownOpen(false);
+    }
+  };
+  
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => setDropdownOpen(false);
+  
+    if (isDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+  
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
   
 
   const toggleDropdown = () => {
@@ -59,14 +83,14 @@ export default function UserDropdown({ onToggleEditMode }: UserDropdownProps) {
               <div className=" truncate">{user.email}</div>
             </div>
             <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownInformationButton">
-              <li>
+              {/* <li>
                 <p className="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                   Profile
                 </p>
-              </li>
+              </li> */}
               <li>
                 <button onClick={toggleEditMode} className={`w-full hover:bg-gray-100 dark:hover:bg-gray-600 block px-4 py-2 italic text-sm text-${editMode ? "red" : "blue"}-400 font-bold inline-flex items-center`}>
-                  <FontAwesomeIcon className="mr-1" icon={editMode ? faEyeSlash : faEye} />
+                  <FontAwesomeIcon className="mr-1" icon={editMode ? faEye : faEdit} />
                   <span>{editMode ? "Disable Edit" : "Enable Edit"}</span>
                 </button>
               </li>

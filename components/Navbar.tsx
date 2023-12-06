@@ -10,9 +10,10 @@ interface NavbarProps {
   onToggleAside: () => void;
   onHomeClick: () => void;
   onEditModeChange: (editMode: boolean) => void;
+  onAbbreviationClick: () => void;
 }
 
-export default function Navbar({ onToggleAside, onHomeClick, onEditModeChange }: NavbarProps) {
+export default function Navbar({ onToggleAside, onHomeClick, onEditModeChange, onAbbreviationClick }: NavbarProps) {
  
 
   function handleToggleEditMode(editMode: boolean): void {
@@ -26,6 +27,7 @@ export default function Navbar({ onToggleAside, onHomeClick, onEditModeChange }:
         <FontAwesomeIcon icon={faBars} />
       </button>
       <button onClick={onHomeClick}  className=' px-4 mr-2 h-full hover:bg-gray-100'>home</button>
+      <button onClick={onHomeClick}  className=' px-4 mr-2 h-full hover:bg-gray-100'>Abbreviations</button>
       <SearchBar placeholder='Search Q and As' />
 
       <div className="space-x-6 flex  align-center">

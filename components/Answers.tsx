@@ -9,6 +9,9 @@ import { DeleteIcon } from "@/icons/Delete";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 // import { appEditMode } from "@/lib/storage";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 interface Question {
   _id: string;
   title: string;
@@ -77,11 +80,13 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   const handleContentDeleteClick = async (contentIndex: number) => {
     // Call the passed function to handle the deletion
     onDeleteContent(question._id, contentIndex);
+    toast.done("Qusestion deleted successfully!")
   };
 
   const handleUpdateClick = async () => {
     // Call the passed function to handle the deletion
     onUpdateQuestion(question._id);
+    toast.success("Successfully saved changes!");
   };
 
   const handleNewAnswerClick = async () => {
@@ -154,6 +159,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
 
       {editMode &&
         <>
+          <ToastContainer/>
           <button
             onClick={handleNewAnswerClick}
             className="italic text-xs text-blue-400 font-bold inline-flex items-center mt-2"

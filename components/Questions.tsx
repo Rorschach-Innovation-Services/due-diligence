@@ -184,12 +184,12 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
     const hasQuestionWithEmptyTitle = questionsFromDb.some(
       (question) => !question.title || !question.title.trim()
     );
-  
+
     if (hasQuestionWithEmptyTitle) {
       toast.error("Cannot have more than one empty question!");
       return;
     }
-  
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}`,
@@ -200,12 +200,12 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
           },
         }
       );
-  
+
       if (response.ok) {
         const data = await response.json();
-  
+
         const newQuestion = data.newQuestion;
-  
+
         if (newQuestion) {
           // Fetch the newly added question by its lastedited value
           const questionResponse = await fetch(
@@ -214,19 +214,19 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
               method: "GET",
             }
           );
-  
+
           if (questionResponse.ok) {
             const questionData = await questionResponse.json();
             const addedQuestion = questionData.question;
-  
+
             setQuestionsFromDb((prevQuestions) => [
               ...prevQuestions,
               addedQuestion, // Add the newly fetched question to the state
             ]);
-  
+
             // Expand the newly added question based on its _id
             handleQuestionClick(addedQuestion._id);
-  
+
             setNewQuestion(addedQuestion.lastedited);
           } else {
             console.error("Failed to fetch the newly added question");
@@ -241,9 +241,9 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
       console.error("Error creating a new question:", error);
     }
   };
-  
-  
-  
+
+
+
   const handleDeleteQuestion = async (questionId: string) => {
     try {
       let url = `${process.env.NEXT_PUBLIC_API_URL}/api/questions?categoryId=${selectedCategory?._id}&questionId=${questionId}`;
@@ -404,23 +404,30 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
                   {expandedQuestionIds.includes(question._id) ? (
                     <div className="mr-2 flex w-full cursor-pointer">
                       <div className="flex w-full items-start">
-                        {editMode ? (<textarea
-                          placeholder="Please enter the question..."
-                          className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editMode ? "border-green-500 border-1" : ""
-                            }`}
-                          value={titleValues[question._id] || ""}
-                          readOnly={!editMode}
-                          onChange={(e) => {
-                            setTitleValues((prevValues) => ({
-                              ...prevValues,
-                              [question._id]: e.target.value,
-                            }));
-                          }}
-                          rows={3}
-                          style={{ marginRight: "8px" }}
-                        // onBlur={handleTitleInputBlur}
-                        />)
-                          : (<p onClick={() => handleQuestionClick(question._id)} className="mb-2 cursor-pointer w-full text-sm">{question.title}</p>)}
+                        {/* <p>Question:</p> */}
+                        {editMode ?
+                          (
+                            <textarea
+                              placeholder="Please enter the question..."
+                              className={`w-full text-sm outline-none outline-0 bg-transparent resize-none ${editMode ? "border-green-500 border-1" : ""
+                                }`}
+                              value={titleValues[question._id] || ""}
+                              readOnly={!editMode}
+                              onChange={(e) => {
+                                setTitleValues((prevValues) => ({
+                                  ...prevValues,
+                                  [question._id]: e.target.value,
+                                }));
+                              }}
+                              rows={3}
+                              style={{ marginRight: "8px" }}
+                            />
+                          )
+                          :
+                          (
+                            <p onClick={() => handleQuestionClick(question._id)} className="mb-2 cursor-pointer w-full text-sm">{question.title}</p>
+                          )
+                        }
                       </div>
                     </div>
                   ) : (
@@ -442,21 +449,24 @@ function QuestionItemList({ selectedCategory, selectedCategoryName, editMode }: 
                 )}
               </div>
               {expandedQuestionIds.includes(question._id) && (
-                <QuestionItem
-                  key={question.title}
-                  question={question}
-                  expandedQuestionIds={expandedQuestionIds}
-                  textareaValues={textareaValues}
-                  setExpandedQuestionIds={setExpandedQuestionIds}
-                  setTextareaValues={setTextareaValues}
-                  contentEditMode={contentEditMode}
-                  setContentEditMode={setContentEditMode}
-                  onDeleteQuestion={handleDeleteQuestion}
-                  onUpdateQuestion={handleUpdateQuestion}
-                  onAddNewAnswer={handleNewAnswer}
-                  onDeleteContent={handleDeleteContent}
-                  editMode={editMode}
-                />
+                <>
+                  {/* <p>Answer(s):</p> */}
+                  <QuestionItem
+                    key={question.title}
+                    question={question}
+                    expandedQuestionIds={expandedQuestionIds}
+                    textareaValues={textareaValues}
+                    setExpandedQuestionIds={setExpandedQuestionIds}
+                    setTextareaValues={setTextareaValues}
+                    contentEditMode={contentEditMode}
+                    setContentEditMode={setContentEditMode}
+                    onDeleteQuestion={handleDeleteQuestion}
+                    onUpdateQuestion={handleUpdateQuestion}
+                    onAddNewAnswer={handleNewAnswer}
+                    onDeleteContent={handleDeleteContent}
+                    editMode={editMode}
+                  />
+                </>
               )}
             </div>
           ))}

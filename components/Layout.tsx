@@ -27,6 +27,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [newGroup, setNewGroup] = useState<boolean>(false);
   const { user, error, isLoading } = useUser();
+  const [abbreviation, showAbbreviation] = useState<boolean>(false);
 
   const [value, setValue] = useState('');
   const modules = {
@@ -118,7 +119,12 @@ const Layout = ({ children }: LayoutProps) => {
 
   const showHomeContent = () => {
     setSelectedCategory(null);
+    showAbbreviation(false);
     // localStorage.setItem("selectedCategoryId", "");
+  }
+  const showAbbreviationContent = () => {
+    setSelectedCategory(null);
+    showAbbreviation(true);
   }
 
   useEffect(() => {
@@ -191,7 +197,7 @@ const Layout = ({ children }: LayoutProps) => {
 
 
       <div className="flex flex-col flex-1 ">
-        <Navbar onEditModeChange={handleToggleEditMode} onToggleAside={toggleAside} onHomeClick={showHomeContent} />
+        <Navbar onEditModeChange={handleToggleEditMode} onToggleAside={toggleAside} onAbbreviationClick={showAbbreviationContent} onHomeClick={showHomeContent} />
 
         <main className="p-6 flex-2 bg-gray-100 overflow-y-auto min-h-screen">
           {selectedCategory ? <QuestionItemList editMode={editMode} selectedCategoryName={selectedCategoryName} selectedCategory={selectedCategory} /> :
