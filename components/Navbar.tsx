@@ -27,7 +27,7 @@ export default function Navbar({ onToggleAside, onHomeClick, onEditModeChange, o
         <FontAwesomeIcon icon={faBars} />
       </button>
       <button onClick={onHomeClick}  className=' px-4 mr-2 h-full hover:bg-gray-100'>home</button>
-      <button onClick={onHomeClick}  className=' px-4 mr-2 h-full hover:bg-gray-100'>Abbreviations</button>
+      {/* <button onClick={onHomeClick}  className=' px-4 mr-2 h-full hover:bg-gray-100'>Abbreviations</button> */}
       <SearchBar placeholder='Search Q and As' />
 
       <div className="space-x-6 flex  align-center">

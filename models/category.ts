@@ -13,6 +13,18 @@ const abbreviationSchema = new Schema<Abbreviation>({
 
 const AbbreviationModel = mongoose.models.Abbreviation || mongoose.model<Abbreviation>('Abbreviation', abbreviationSchema);
 
+
+interface HomeContent extends Document {
+  content: string;
+}
+
+const homeSchema = new Schema<HomeContent>({
+  content: { type: String, required: true },
+});
+
+const HomeContentModel = mongoose.models.HomeContent || mongoose.model<HomeContent>('HomeContent', homeSchema);
+
+
 // Schema for the groups collection
 interface Group extends Document {
   name: string;
@@ -56,4 +68,4 @@ const categorySchema = new Schema<Category>({
 
 const CategoryModel = mongoose.models.Category || mongoose.model<Category>('Category', categorySchema);
 
-export { AbbreviationModel, GroupModel, CategoryModel };
+export { AbbreviationModel, GroupModel, CategoryModel, HomeContentModel };

@@ -27,6 +27,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [newGroup, setNewGroup] = useState<boolean>(false);
   const { user, error, isLoading } = useUser();
+  const [loading, setLoading] = useState(true);
   const [abbreviation, showAbbreviation] = useState<boolean>(false);
 
   const [value, setValue] = useState('');
@@ -95,12 +96,14 @@ const Layout = ({ children }: LayoutProps) => {
         setSelectedCategory(initialSelectedCategory);
       } catch (error) {
         console.error("Error fetching categories:", error);
+      } finally {
+        setLoading(false); // Set loading to false when the data is loaded
       }
     };
-  
+
     fetchData();
   }, []);
-  
+
 
 
   const handleCategoryChange = (category: any) => {
@@ -200,21 +203,31 @@ const Layout = ({ children }: LayoutProps) => {
         <Navbar onEditModeChange={handleToggleEditMode} onToggleAside={toggleAside} onAbbreviationClick={showAbbreviationContent} onHomeClick={showHomeContent} />
 
         <main className="p-6 flex-2 bg-gray-100 overflow-y-auto min-h-screen">
-          {selectedCategory ? <QuestionItemList editMode={editMode} selectedCategoryName={selectedCategoryName} selectedCategory={selectedCategory} /> :
-            <div>
-              <ReactQuill
-                theme="snow"
-                value={""}
-                onChange={(newContent) => {
+          {loading ? (
+            <div className="flex items-center justify-center text-xs h-full w-full">
+              <p>Getting Questions...</p>
+            </div>
 
-                }}
-                modules={modules}
-                formats={formats}
-                placeholder="Add answer..."
-                style={{ height: '100%', width: "100%", fontSize: '14px' }}
-              />
-              <br />
-              {/* <div className=" text-sm max-w-screen-lg mx-auto whitespace-pre-line text-justify">
+          ) : (
+            <>
+              {
+                selectedCategory ?
+                  <QuestionItemList editMode={editMode} selectedCategoryName={selectedCategoryName} selectedCategory={selectedCategory} />
+                  :
+                  <div>
+                    <ReactQuill
+                      theme="snow"
+                      value={""}
+                      onChange={(newContent) => {
+
+                      }}
+                      modules={modules}
+                      formats={formats}
+                      placeholder="Add answer..."
+                      style={{ height: '100%', width: "100%", fontSize: '14px' }}
+                    />
+                    <br />
+                    {/* <div className=" text-sm max-w-screen-lg mx-auto whitespace-pre-line text-justify">
                 <h1 className="font-bold text-lg">INTRODUCTION</h1>
                 <p>Ethical and financial probity in the administration of research grants and in doing the research itself is a sacrosanct principle for UCT. Funders typically want information about UCT’s overall governance structure, how it manages overall risk in the university, how it specifically manages risk, how it ensures corruption-free and ethical procurement, how it treats its staff and human subjects in research, how it ensures all other aspects of the ethical conduct of research, and how it operates ethically at a university-wide level. It is imperative that the University should be compliant with international standards, and the fact that funders are increasingly probing in detail the exercise of due diligence by awardees (and the institutions in which they carry out their research) presents UCT with a challenge. The challenge is that the level of the scrutiny by funders has meant that individual researchers who are applying for, or who have received, funding are requested to answer increasingly complex sets of due-diligence questions relating to compliance as well as to provide evidence of the content and implementation of the policies underlying the compliance. This is at task which individual researchers can only do with great difficulty and currently, RC&I, CFR and IGH assist researchers in answering these questions, but they have been rendering this assistance in a situation where there is no clear policy and procedure governing this important aspect of research compliance. In order to rectify this, two interventions are necessary.</p>
                 <br />
@@ -252,9 +265,10 @@ const Layout = ({ children }: LayoutProps) => {
                   The questions and answers are grouped into broad categories (but it should be noted that the categories overlap and different funders place certain questions in different categories (e.g. questions about financial risk management may be asked either under the general rubric of financial governance or under that of general risk management; and questions regarding the University’s measures against becoming party through its procurement policies to forms of modern slavery may be asked under the general heading of the protection of human rights or under the heading of procurement policies).
                 </p>
               </div> */}
-            </div>
-          }
-          {children}
+                  </div>
+              }
+              {children}
+            </>)}
         </main>
       </div>
     </div>
