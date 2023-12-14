@@ -6,7 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 connectToDatabase();
 
-export async function GET(req: Request) {
+export async function GET(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextApiRequest) {
   try {
     // const { , questionId } = req.query;
     const { searchParams } = new URL(req.url as string);
@@ -117,7 +117,7 @@ export async function PUT(req: Request) {
 }
 
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
@@ -177,7 +177,7 @@ export async function DELETE(req: Request) {
 
 
 // Assuming "POST" corresponds to creating a new question
-export async function POST(req: Request) {
+export async function POST(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');

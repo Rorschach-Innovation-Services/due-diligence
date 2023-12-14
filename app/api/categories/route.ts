@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 connectToDatabase();
 
-export async function GET(req: Request) {
+export async function GET(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const id = searchParams.get('id');
@@ -23,6 +23,7 @@ export async function GET(req: Request) {
     } else {
       // Fetch all categories from the database
       const categories = await CategoryModel.find({}, { id: 1, name: 1, group: 1, _id: 1 });
+      console.log("GET THE CATEGORIES:", categories)
       return Response.json({ categories });
     }
   } catch (error) {
@@ -33,7 +34,7 @@ export async function GET(req: Request) {
 }
 
 // Endpoint for adding a new category: /api/categories
-export async function POST(req: Request) {
+export async function POST(req: NextApiRequest) {
   try {
     // Parse the request body
     let passedValue = await new Response(req.body).text();
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Internal Server Error' });
   }
 }
-export async function PUT(req: Request) {
+export async function PUT(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
@@ -96,7 +97,7 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');

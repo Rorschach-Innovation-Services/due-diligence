@@ -1,7 +1,8 @@
 import {CategoryModel} from "@/models/category";
+import { NextApiRequest } from "next";
 // import { NextApiRequest, NextApiResponse } from "next";
 
-export async function POST(req: Request) {
+export async function POST(req: NextApiRequest) {
     try {
         const { searchParams } = new URL(req.url as string);
         const categoryId = searchParams.get('categoryId');
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
     }
   };
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');

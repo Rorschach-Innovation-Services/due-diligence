@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 connectToDatabase();
 
-export async function GET(req: Request) {
+export async function GET(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const id = searchParams.get('groupId');
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 }
 
 // Endpoint for adding a new group: /api/group
-export async function POST(req: Request) {
+export async function POST(req: NextApiRequest) {
   try {
     // Parse the request body
     let passedValue = await new Response(req.body).text();
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Internal Server Error' });
   }
 }
-export async function PUT(req: Request) {
+export async function PUT(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const groupId = searchParams.get('groupId');
@@ -99,7 +99,7 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextApiRequest) {
   try {
     const { searchParams } = new URL(req.url as string);
     const groupId = searchParams.get('groupId');
