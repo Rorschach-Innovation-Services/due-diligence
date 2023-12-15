@@ -9,6 +9,5 @@ export default function Home() {
     <Layout >
      
     </Layout>
-    // <div>Hello</div>
   )
 }
