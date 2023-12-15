@@ -3,6 +3,8 @@ const nextConfig = {
     experimental: {
       maxNumberOfWorkers: 2,
       disableOptimizedLoading: true,
+      scriptSetup: true,
+      output: 'esm'
     }
   }
   
