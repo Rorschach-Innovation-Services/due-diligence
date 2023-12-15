@@ -17,12 +17,12 @@ export default function Navbar({ onToggleAside, onHomeClick, onEditModeChange, o
  
 
   function handleToggleEditMode(editMode: boolean): void {
-    console.log("EDOT MODE IN NavBar:", editMode)
+    console.log("EDIT MODE IN NavBar:", editMode)
     onEditModeChange(editMode);
   }
 
   return (
-    <nav className="flex items-center justify-between p-6 bg-white border-b border-gray-300">
+    <nav className="flex items-center text-sm justify-between p-6 py-4 bg-white border-b border-gray-300">
       <button onClick={onToggleAside} className="text-black mr-0 h-full px-4 hover:bg-gray-100">
         <FontAwesomeIcon icon={faBars} />
       </button>

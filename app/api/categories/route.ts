@@ -5,7 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 connectToDatabase();
 
-export async function GET(req: NextApiRequest) {
+export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url as string);
     const id = searchParams.get('id');
@@ -34,7 +34,7 @@ export async function GET(req: NextApiRequest) {
 }
 
 // Endpoint for adding a new category: /api/categories
-export async function POST(req: NextApiRequest) {
+export async function POST(req: Request) {
   try {
     // Parse the request body
     let passedValue = await new Response(req.body).text();
@@ -59,7 +59,7 @@ export async function POST(req: NextApiRequest) {
     return Response.json({ error: 'Internal Server Error' });
   }
 }
-export async function PUT(req: NextApiRequest) {
+export async function PUT(req: Request) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');
@@ -97,7 +97,7 @@ export async function PUT(req: NextApiRequest) {
   }
 }
 
-export async function DELETE(req: NextApiRequest) {
+export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url as string);
     const categoryId = searchParams.get('categoryId');

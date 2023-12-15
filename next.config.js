@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     experimental: {
-      // maxNumberOfWorkers: 2,
-      // disableOptimizedLoading: true,
+      maxNumberOfWorkers: 2,
+      disableOptimizedLoading: true,
     }
   }
   
