@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import OptionsDropdown from "./OptionsDropdown";
 import { DeleteIcon } from '@/icons/Delete';
 import { EditIcon } from '@/icons/EditIcon';
+import SearchBar from './SearchBar';
 
 interface Question {
   _id: string;
@@ -488,10 +489,10 @@ export default function QuestionCategoryList({ onCategoryChange, onCategoryNameC
 
   return (
     <div className="p-4" style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
-
+      
       <div className="space-y-2">
         {loading ? (
-          <p>Loading...</p>
+          <p className='text-white bold'>Loading...</p>
         ) : (
           Object.entries(groupedCategories).map(([groupName, groupCategories]) => (
             <div key={groupName}>

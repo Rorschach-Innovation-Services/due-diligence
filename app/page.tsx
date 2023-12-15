@@ -6,9 +6,9 @@ const Layout = dynamic(() => import("../components/Layout"), {
 });
 export default function Home() {
   return (
-    // <Layout >
+    <Layout >
      
-    // </Layout>
-    <div>Hello</div>
+    </Layout>
+    // <div>Hello</div>
   )
 }

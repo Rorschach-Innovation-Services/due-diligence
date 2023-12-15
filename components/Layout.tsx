@@ -9,6 +9,7 @@ import { faBars, faCancel, faClose, faPlus, faTimes } from "@fortawesome/free-so
 import { useUser } from '@auth0/nextjs-auth0/client';
 // import { appEditMode } from "@/lib/storage";
 import ReactQuill from "react-quill";
+import SearchBar from "./SearchBar";
 
 
 interface LayoutProps {
@@ -161,19 +162,22 @@ const Layout = ({ children }: LayoutProps) => {
 
   console.log("Selected Category IN LAYOUT is:", selectedCategory)
   return (
-
+    // style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}
     <div className="flex bg-gray-900">
-      <aside ref={sidebarRef} className={`md:w-2/6 border-r flex flex-col border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+
+      <aside ref={sidebarRef} className={`md:w-2/6 border-r flex content-start flex-col border-gray-300 bg-slate-900 transition-transform transform fixed h-full z-10 ${asideOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+
         <div className="p-4 flex justify-end">
           <button onClick={toggleAside} className="text-white">
             <FontAwesomeIcon icon={asideOpen ? faTimes : faBars} />
           </button>
         </div>
 
+        <SearchBar placeholder='Search Q and As' />
         {user && editMode && (
           <button
             onClick={() => setIsAddingGroup(true)} // Updated this line
-            className="self-center w-5/6 bg-green-400 p-2 bg-opacity-10 hover:bg-opacity-25 rounded hover:bg-green-500 italic mb-2 text-xs text-green-400 font-bold justify-center inline-flex items-center"
+            className="ml-4 mr-2 mt-2 self-left w-50 bg-green-400 p-2 bg-opacity-10 hover:bg-opacity-25 rounded hover:bg-green-500 italic mb-2 text-xs text-green-400 font-bold justify-center inline-flex items-center"
           >
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
             <span>Add Group</span>
